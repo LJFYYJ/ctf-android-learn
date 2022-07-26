@@ -1,9 +1,7 @@
 # ISCC2021 LOCKK题解
 
 * [程序运行](#程序运行)
-  
 * [静态分析](#静态分析)
-  
   * [JEB静态分析APK](#jeb静态分析apk)
   * [IDA静态分析so](#ida静态分析so)
     * [寻找encryptData函数](#寻找encryptdata函数)
@@ -17,15 +15,11 @@
         * [key扩展函数sub\_558C](#key扩展函数sub_558c)
         * [轮计算函数sub\_56AC](#轮计算函数sub_56ac)
 * [动态分析](#动态分析)
-
   * [IDA pro attach进程](#ida-pro-attach进程)
   * [调试得到所有subkeys](#调试得到所有subkeys)
-
 * [解密算法](#解密算法)
-
   * [Base64 解码](#base64-解码)
   * [变种AES解密](#变种aes解密)
-
   * [AES原理](#aes原理)
     * [KeyExpansion()](#keyexpansion)
       * [RotWord()](#rotword)
