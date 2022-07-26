@@ -48,7 +48,7 @@ Android Studio项目结构主要包括：
     - 包含如字符串、尺寸、颜色和样式定义在内的许多XML文件
     - 其中一个最重要的文件是包含字符串信息的**strings.xml**文件
 
-![](./img/4-android studio项目结构.png)
+![](./img/4-androidstudio项目结构.png)
 
 ### Android SDK
 
@@ -60,9 +60,9 @@ Android SDK是开发Android应用程序所需的软件开发工具和库的集�
 
 sdk manager：
 
-![](./img/6-sdk android版本.png)
+![](./img/6-sdk-android版本.png)
 
-![](./img/7-sdk android tools.png)
+![](./img/7-sdk-android-tools.png)
 
 Android SDK包含了从头开始编写程序一直到进行测试所需的所有工具， 这些工具使得从开发、调试到打包的整个开发过程非常顺畅：
 
@@ -345,7 +345,7 @@ Dalvik虚拟机与Java虚拟机的主要区别：
 
 下图展示了Java代码在Dalvik虚拟机和ART虚拟机上编译执行的区别：
 
-![](./img/22-Dalvik ART.png)
+![](./img/22-Dalvik-ART.png)
 
 https://www.youtube.com/watch?v=m9UZnWLLurY
 
@@ -514,7 +514,7 @@ https://developer.android.com/studio/command-line/adb
 
 双击打开MainActivity字节码，右键选择解析/按TAB键，可以看到反编译得到的MainActivity类的Java代码。一般反编译先从MainActivity入手，查看函数逻辑。
 
-![](./img/13-JEB mainactivity.png)
+![](./img/13-JEB-mainactivity.png)
 
 #### AndroidManifest.xml
 
@@ -524,23 +524,23 @@ JEB逆向AndroidManifest.xml，将其解析为可读的格式，根据该文件�
 
 在拿到APK后一般第一个查看这个清单文件，首先要查看APK包含几个Activity，然后找到该APK的启动Activity；留意APK有没有定义其他组件，如Service、Receiver等，它们可能会用来实现不同进程的RPC调用；关注APK**所需的权限**，寻找可能的攻击面。
 
-![](./img/14-JEB 清单文件.png)
+![](./img/14-JEB清单文件.png)
 
 #### res/values/资源文件
 
 解密原resources.arsc文件，得到多个XML文件存放在res/values/目录下
 
-![](./img/15-JEB xml文件.png)
+![](./img/15-JEB-xml文件.png)
 
 res/values/目录下的XML文件中，重要的是public.xml和strings.xml。
 
 public.xml中存放着Android程序中所使用的的ID与类型、变量名之间的关系，如果反编译后的代码中有”R.id.xxx”或者”find-ViewById(xxx)”形式的代码，只需要到public.xml中查找该ID对应的变量类型和变量名。
 
-![](./img/16-JEB public.xml.png)
+![](./img/16-JEB-public.xml.png)
 
 然后再到相应的文件如strings.xml中查找相应的值。
 
-![](./img/17-JEB strings.xml.png)
+![](./img/17-JEB-strings.xml.png)
 
 ### JEB动态调试APK
 
@@ -571,7 +571,7 @@ Dalvik虚拟机在启用调试后都会启动一个JDWP线程，等待打开DDMS
 
 adb在电脑中所在位置可以参考：
 
-![](./img/25-adb location.png)
+![](./img/25-adb-location.png)
 
 ##### 手机/模拟器运行APK
 
@@ -593,11 +593,11 @@ adb在电脑中所在位置可以参考：
 
 检查APP名称是否正确，点击附上
 
-![](./img/28-JEB debug.png)
+![](./img/28-JEB-debug.png)
 
 JEB右侧出现VM栏：
 
-![](./img/29-JEB VM.png)
+![](./img/29-JEB-VM.png)
 
 在MainActivity的smali代码中，按照需求选择获取所需返回值的下一行，然后ctrl+B下断点：
 
@@ -639,7 +639,7 @@ Log.e(String tag, String msg);
 
 将APK文件拖入Android Killer工具中。
 
-![](./img/38-Android Killer.png)
+![](./img/38-Android-Killer.png)
 
 在50行之前输入：
 
@@ -647,11 +647,11 @@ Log.e(String tag, String msg);
 invoke-static {v5, v5}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
 ```
 
-![](./img/39-输入log smali语句.png)
+![](./img/39-输入log-smali语句.png)
 
 保存文件修改后，点击编译重打包APK，然后在生成路径下找到打包后的文件。
 
-![](./img/40-Android Killer重打包.png)
+![](./img/40-AndroidKiller重打包.png)
 
 在模拟器上安装APK，使用`adb logcat`查看log输出信息，然后模拟器触发事件，就可以看到相应的log。
 
@@ -720,7 +720,7 @@ IDA查看**标准的Native方法命名**的函数：
 
 IDA查看**JNI_OnLoad**函数：
 
-![](./img/43-IDA JNI_OnLoad.png)
+![](./img/43-IDA-JNI_OnLoad.png)
 
 #### init_array端
 
@@ -732,7 +732,7 @@ IDA查看**init_array段**：
 
 
 
-![](./img/45-IDA init_array段.png)
+![](./img/45-IDA-init_array段.png)
 
 双击进入init_array字段：
 
@@ -756,7 +756,7 @@ IDA查看**init_array段**：
 
 在JNI_OnLoad函数中，通过Edit->Patch program->Change byte，输入4个00，将反调试patch掉。
 
-![](./img/49-IDA patch.png)
+![](./img/49-IDA-patch.png)
 
 此时再点击F5进行反编译，发现已经没有反调试这句代码了：
 
@@ -770,7 +770,7 @@ IDA查看**init_array段**：
 
 在IDA目录下的dbgsrv文件夹中找到android_server（因为这个适用于32位arm架构，64位arm处理器则需要android_server64文件），然后将该文件传输到手机端的/data/local/tmp文件夹下：
 
-![](./img/52-adb push  android_server.png)
+![](./img/52-adb-push-android_server.png)
 
 然后输入adb shell，进入模拟器的/data/local/tmp文件夹，将android_server的权限设置为777，然后运行该文件：
 
@@ -792,7 +792,7 @@ IDA查看**init_array段**：
 
 然后把打过补丁的so库push到该文件夹中：adb push C:\Users\XXXX\Desktop\libLibs.so /data/app/com.iscclockk-1/lib/arm/。如果报错权限不够，需要用adb root语句。（如果使用了adb root语句，会重启adb，前面的android_server运行会关闭，需要重新运行android_server并转发端口。）
 
-![](./img/57-push patch后so库.png)
+![](./img/57-push-patch后so库.png)
 
 接着查看新so库的情况，设置so库的权限：
 
