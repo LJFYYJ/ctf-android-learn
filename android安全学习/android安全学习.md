@@ -1,7 +1,5 @@
 # android安全学习
 
-[TOC]
-
 主要参考《CTF训练营》
 
 ## android

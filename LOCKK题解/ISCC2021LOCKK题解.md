@@ -1,7 +1,5 @@
 # ISCC2021 LOCKK题解
 
-[TOC]
-
 ## 程序运行
 
 输入ISCC{123}，点击ENCRYPT实现加密
