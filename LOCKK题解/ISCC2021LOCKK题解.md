@@ -1,5 +1,43 @@
 # ISCC2021 LOCKK题解
 
+* [程序运行](#程序运行)
+  
+* [静态分析](#静态分析)
+  
+  * [JEB静态分析APK](#jeb静态分析apk)
+  * [IDA静态分析so](#ida静态分析so)
+    * [寻找encryptData函数](#寻找encryptdata函数)
+    * [encryptData函数](#encryptdata函数)
+    * [包签名检查函数sub\_4C3C](#包签名检查函数sub_4c3c)
+    * [初始key生成函数sub\_5134](#初始key生成函数sub_5134)
+      * [append函数](#append函数)
+      * [md5函数](#md5函数)
+    * [主要的处理函数sub\_5038](#主要的处理函数sub_5038)
+      * [加密函数sub\_5880](#加密函数sub_5880)
+        * [key扩展函数sub\_558C](#key扩展函数sub_558c)
+        * [轮计算函数sub\_56AC](#轮计算函数sub_56ac)
+* [动态分析](#动态分析)
+
+  * [IDA pro attach进程](#ida-pro-attach进程)
+  * [调试得到所有subkeys](#调试得到所有subkeys)
+
+* [解密算法](#解密算法)
+
+  * [Base64 解码](#base64-解码)
+  * [变种AES解密](#变种aes解密)
+
+  * [AES原理](#aes原理)
+    * [KeyExpansion()](#keyexpansion)
+      * [RotWord()](#rotword)
+      * [SubWord()](#subword)
+      * [Rcon()](#rcon)
+      * [例子](#例子)
+    * [轮加密](#轮加密)
+      * [字节替换](#字节替换)
+      * [行移位](#行移位)
+      * [列混淆](#列混淆)
+      * [轮密钥加](#轮密钥加)
+
 ## 程序运行
 
 输入ISCC{123}，点击ENCRYPT实现加密
