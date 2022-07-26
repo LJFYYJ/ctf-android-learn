@@ -1,5 +1,7 @@
 # ISCC2021 LOCKK题解
 
+[TOC]
+
 ## 程序运行
 
 输入ISCC{123}，点击ENCRYPT实现加密
@@ -107,9 +109,9 @@ sub_4C3C中简单修复函数参数、修改变量名称后：
 
 ##### 加密函数sub_5880
 
-![](./lockkimg/20-sub_5880 1.png)
+![](./lockkimg/20-sub_5880-1.png)
 
-![](./lockkimg/21-sub_5880 2.png)
+![](./lockkimg/21-sub_5880-2.png)
 
 ###### key扩展函数sub_558C
 

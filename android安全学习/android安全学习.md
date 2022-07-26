@@ -1,5 +1,7 @@
 # android安全学习
 
+[TOC]
+
 主要参考《CTF训练营》
 
 ## android
@@ -164,7 +166,7 @@ APP_ABI := all
 
 然后将这些文件放在jni文件夹中，使用`ndk-build`编译：
 
-![](./img/42-ndk build编译.png)
+![](./img/42-ndk-build编译.png)
 
 
 
