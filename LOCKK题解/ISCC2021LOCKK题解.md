@@ -4,11 +4,11 @@
 
 输入ISCC{123}，点击ENCRYPT实现加密
 
-![](.\lockkimg\1-程序加密.png)
+![](./lockkimg/1-程序加密.png)
 
 点击DERYPT，发现得到一个假flag：
 
-![](.\lockkimg\2-程序解密.png)
+![](./lockkimg/2-程序解密.png)
 
 ## 静态分析
 
@@ -16,11 +16,11 @@
 
 JEB打开APK，onClick函数运行时，框内默认为空，点击解密按钮就会出现x函数中的fakeflag，点击加密按钮则会显示y函数中的加密结果。
 
-![](.\lockkimg\3-jeb解析.png)
+![](./lockkimg/3-jeb解析.png)
 
 观察SecureUtil函数，发现是先调用native层的encryptdata函数，再Base64加密。
 
-![](.\lockkimg\4-SecureUtil函数.png)
+![](./lockkimg/4-SecureUtil函数.png)
 
 通过翻看Assets文件夹可以猜测，flag的加密结果放在了log文件中，为：
 
@@ -32,15 +32,15 @@ j9lXGz/eWs4iODrHgTbQZdtXl1RjO82FQhSADajx1vRNnw2NIASP/2mySb2Dqmgh
 
 将armeabi-v7a文件夹（另一个文件夹下的so文件IDA反编译结果会和下图示例不同）下的so库拖入IDA中反编译，因为在函数导出列表中并没有找到encryptData函数，说明采用了动态注册的方法，因此找到JNI_OnLoad函数，其包含了简易的反调试信息：
 
-![](.\lockkimg\5-JNI_OnLoad.png)
+![](./lockkimg/5-JNI_OnLoad.png)
 
 JNI_OnLoad函数中最下面的部分与native注册函数RegisterNatives(env, class, method, numMethods)的格式类似，注意到off_1D004：
 
-![](.\lockkimg\6-JNI_OnLoad下面.png)
+![](./lockkimg/6-JNI_OnLoad下面.png)
 
 双击进入，里面的sub_4B8C就是要找的函数encryptData。
 
-![](.\lockkimg\7-sub_4B8C.png)
+![](./lockkimg/7-sub_4B8C.png)
 
 #### encryptData函数
 
@@ -48,68 +48,68 @@ JNI_OnLoad函数中最下面的部分与native注册函数RegisterNatives(env, c
 
 更改参数类型前：
 
-![](.\lockkimg\8-更改参数类型前.png)
+![](./lockkimg/8-更改参数类型前.png)
 
 更改参数类型：选中第一行，右击鼠标后，选择Set item type，打开修改框修改 。
 
-![](.\lockkimg\9-更改参数类型.png)
+![](./lockkimg/9-更改参数类型.png)
 
 `jbyteArray __fastcall sub_4B8C(JNIEnv * env, jclass thiz, jobject context, jbyteArray input)`
 
 函数参数修复完成后，开始分析程序，可以看出最主要的关键函数为sub_4C3C、sub_5134和sub_5038：
 
-![](.\lockkimg\10-关键函数分析.png)
+![](./lockkimg/10-关键函数分析.png)
 
 后面主要涉及到的函数，浅蓝色为相比于原始AES的被修改部分：
 
-![](.\lockkimg\11-主要函数思维导图.png)
+![](./lockkimg/11-主要函数思维导图.png)
 
 #### 包签名检查函数sub_4C3C
 
 sub_4C3C中简单修复函数参数、修改变量名称后：
 
-![](.\lockkimg\12-包签名检查函数.png)
+![](./lockkimg/12-包签名检查函数.png)
 
 检查部分签名：
 
-![](.\lockkimg\13-签名检查.png)
+![](./lockkimg/13-签名检查.png)
 
 检查包名是否为com.iscclockk
 
-![](.\lockkimg\14-包名检查.png)
+![](./lockkimg/14-包名检查.png)
 
 #### 初始key生成函数sub_5134
 
 函数输出可以通过动态调试直接得到，可以识别出append函数和md5函数
-![](.\lockkimg\15-初始key生成函数.png)
+![](./lockkimg/15-初始key生成函数.png)
 
 ##### append函数
 
 可以看到有basic_string::append的信息
 
-![](.\lockkimg\16-识别append函数.png)
+![](./lockkimg/16-识别append函数.png)
 
 ##### md5函数
 
 可发现md5的初始变量魔数
 
-![](.\lockkimg\17-md5函数识别.png)
+![](./lockkimg/17-md5函数识别.png)
 
 #### 主要的处理函数sub_5038
 
 可以识别sub_5880处为主要加密函数
 
-![](.\lockkimg\18-主要处理函数.png)
+![](./lockkimg/18-主要处理函数.png)
 
 这里也初始化了16位的iv，基本上这里就可以初步判断出来加密方法。iv为0xDE, 0xAD, 0xBE, 0xEF, 0xCD, 0xDE, 0xAD, 0xBE, 0xEF, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD,  0xAA
 
-![](.\lockkimg\19-iv.png)
+![](./lockkimg/19-iv.png)
 
 ##### 加密函数sub_5880
 
-![](.\lockkimg\20-sub_5880 1.png)
+![](./lockkimg/20-sub_5880 1.png)
 
-![](.\lockkimg\21-sub_5880 2.png)
+![](./lockkimg/21-sub_5880 2.png)
 
 ###### key扩展函数sub_558C
 
@@ -129,23 +129,23 @@ AES基础知识：https://www.davidwong.fr/blockbreakers/aes.html
 | ---- | ---- | ---- | ---- |
 | 0    | 3    | 2    | 1    |
 
-![](.\lockkimg\22-rotword.png)
+![](./lockkimg/22-rotword.png)
 
 接下来的部分，则是在获取S盒内容，S盒内容采用数论的方法生成：
 
-![](.\lockkimg\23-获取S盒内容.png)
+![](./lockkimg/23-获取S盒内容.png)
 
 S盒sub_5970
 
 在sub_5970函数中，可以根据魔数0x63进一步确定该部分可以生成S盒；在函数的最后用到了传入的参数a1，可以通过动态调试来确定v2就是标准的S盒：
 
-![](.\lockkimg\24-S盒生成函数.png)
+![](./lockkimg/24-S盒生成函数.png)
 
 ###### 轮计算函数sub_56AC
 
 进入sub_56AC函数中，可以看到前面获取S盒内容进行字节替换：
 
-![](.\lockkimg\25-每轮计算获取S盒内容.png)
+![](./lockkimg/25-每轮计算获取S盒内容.png)
 
 后半部分则是行移位，这里行移位与标准的AES也有不同：
 
@@ -173,7 +173,7 @@ S盒sub_5970
 | 8    | 5    | 2    | 15   |
 | 12   | 9    | 6    | 3    |
 
-![](.\lockkimg\26-移位.png)
+![](./lockkimg/26-移位.png)
 
 之后根据Rotword和ShiftRows步骤的修改，相应改变AES解密代码，可得到结果。
 
@@ -185,11 +185,11 @@ S盒sub_5970
 
 在右侧的Modules模块中可以找到加载后的libLibs.so库。
 
-![](.\lockkimg\27-IDA libs库.png)
+![](./lockkimg/27-IDA libs库.png)
 
 双击进入后，可以方便的查看到我们想看的函数。但是因为我们最关心的函数不是导出函数，没法在这里直接看到，所以需要计算偏移地址才能找到。
 
-![](.\lockkimg\28-lib库导出函数.png)
+![](./lockkimg/28-lib库导出函数.png)
 
 ### 调试得到所有subkeys
 
@@ -201,15 +201,15 @@ S盒sub_5970
 
 在sub_56AC中可以看出所有的轮密钥存储在byte_1D0AC中：
 
-![](.\lockkimg\29-subkeys存储位置.png)
+![](./lockkimg/29-subkeys存储位置.png)
 
 为了看某行的偏移地址，可以按下图所示使几个窗口同步，这样在Pseudocode-B窗口选择的某行地址会在IDA View-A窗口中自动高亮。
 
-![](.\lockkimg\30-查看偏移地址.png)
+![](./lockkimg/30-查看偏移地址.png)
 
 此时可以看到用到byte_1D0AC的代码偏移地址0x000056BA：
 
-![](.\lockkimg\31-得到偏移地址.png)
+![](./lockkimg/31-得到偏移地址.png)
 
 而libLibs.so的基地址可以在动态调试的Modules窗口看到，为92D94000
 
@@ -219,35 +219,35 @@ S盒sub_5970
 
 在动态调试的IDA主窗口中按G键，在弹出的窗口中输入该地址，点击OK：
 
-![](.\lockkimg\32-IDA地址跳转.png)
+![](./lockkimg/32-IDA地址跳转.png)
 
 找到该地址后，点击该地址左侧的蓝点位置，弹出断点设置窗口，点击OK：
 
-![](.\lockkimg\33-设置断点.png)
+![](./lockkimg/33-设置断点.png)
 
 该行变成红色说明打下了断点，断点设置完成后，再在模拟器中输入123，并点击Encrypt：
 
-![](.\lockkimg\34-重新运行程序.png)
+![](./lockkimg/34-重新运行程序.png)
 
 可以看到程序运行到了我们加断点的位置，92DB10AC就是subkeys所在的地方。
 
-![](.\lockkimg\35-运行到断点所在位置.png)
+![](./lockkimg/35-运行到断点所在位置.png)
 
 然后按下G键，输入92DB10AC，就可以看到subkeys的数据：
 
-![](.\lockkimg\36-subkeys数据.png)
+![](./lockkimg/36-subkeys数据.png)
 
 可以看到subkeys从0x31开始，一直到0x4A结束，后面是appEnv。
 
-![](.\lockkimg\37-subkeys结束位置.png)
+![](./lockkimg/37-subkeys结束位置.png)
 
 在IDA选中0x31到0x4A的所有数据，点击Edit中的Export data：
 
-![](.\lockkimg\38-IDA导出数据.png)
+![](./lockkimg/38-IDA导出数据.png)
 
 就可以方便的导出subkeys.txt的所有数据了：
 
-![](.\lockkimg\39-IDA完成数据导出.png)
+![](./lockkimg/39-IDA完成数据导出.png)
 
 ```
 unsigned char ida_chars[] =
@@ -296,7 +296,7 @@ output += Integer.toString(b[b.length -1]);
 Log.v("lockk", output);
 ```
 
-![](.\lockkimg\40-base64解密.png)
+![](./lockkimg/40-base64解密.png)
 
 可以在logcat中看到输出的值为：
 
@@ -334,7 +334,7 @@ Log.v("lockk", output);
 
 行移位的代码修改为下图所示即可：
 
-![](.\lockkimg\41-行移位代码修改.png)
+![](./lockkimg/41-行移位代码修改.png)
 
 修改原版的aes解密算法，可得到最终的flag。
 
@@ -366,7 +366,7 @@ AES的工作模式分为ECB、CBC、CFB等：
 
 将 4 个字节的值作为输入，并返回这 4 个字节的循环作为输出
 
-![](.\lockkimg\42-rotword.jpg)
+![](./lockkimg/42-rotword.jpg)
 
 #### SubWord()
 
@@ -374,7 +374,7 @@ SubWord 像前面的函数一样接受 4 个字节的输入，并返回 4 个字
 
 这是查找表，要阅读此表，需要将输入分成行和列两部分：
 
-![](.\lockkimg\42-sbox.png)
+![](./lockkimg/42-sbox.png)
 
 #### Rcon()
 
@@ -413,17 +413,17 @@ var rcon = [256]byte{
 - 然后将其与上一轮密钥的第一列进行异或
 - 然后将其rcon(round)与round整数（从1开始）进行异或。每个回合都有自己的回合密钥。AES-128 需要10轮，并且将使用 10 + 1 = 11 个轮密钥。
 
-![](.\lockkimg\43-key expansion1.png)
+![](./lockkimg/43-key expansion1.png)
 
 要获得轮密钥的其他3列，只需将**前一列**与**相同索引的前一个轮密钥的列**进行异或。
 
-![](.\lockkimg\44-key expansion2.jpg)
+![](./lockkimg/44-key expansion2.jpg)
 
 ### 轮加密
 
 输入到 AES 的明文，然后被处理直到它成为密文，在内部表示为**4 行 4 列的正方形**。这种 AES 内部方形表示被称为“**状态**”，并且在整个加密（或解密）过程中应用于它的不同转换被重新组合成**轮次，**每个**轮次**涉及不同的**轮密钥**。该**轮密钥**从主密钥生成。
 
-![](.\lockkimg\44-key expansion2.jpg)
+![](./lockkimg/44-key expansion2.jpg)
 
 每轮主要工作：
 
@@ -432,7 +432,7 @@ var rcon = [256]byte{
 3. 列混淆
 4. 轮密钥加
 
-![](.\lockkimg\45-AES round.png)
+![](./lockkimg/45-AES round.png)
 
 AES-128 是采用 128 位密钥的 AES 变体，总共有 10 轮。**每一轮都将不同的轮密钥和前一轮的输出作为输入**。请注意，最后一轮与其他轮有点不同，**最后一轮跳过了 MixColumns 转换**。
 
@@ -448,7 +448,7 @@ AES-128 是采用 128 位密钥的 AES 变体，总共有 10 轮。**每一轮�
 
 第一行没有被触及，第二行在左边旋转一个位置，第三个位置旋转两个位置，第四个位置旋转三个位置。
 
-![](.\lockkimg\46-行移位.png)
+![](./lockkimg/46-行移位.png)
 
 #### 列混淆
 
@@ -456,7 +456,7 @@ AES-128 是采用 128 位密钥的 AES 变体，总共有 10 轮。**每一轮�
 
 列混淆中，输入的每个字节都会影响到输出的四个字节。
 
-![](.\lockkimg\47-列混淆.png)
+![](./lockkimg/47-列混淆.png)
 
 逆向列混淆的方法与列混淆相同，只需要将固定矩阵替换成它的逆矩阵。
 
@@ -470,4 +470,4 @@ AES-128 是采用 128 位密钥的 AES 变体，总共有 10 轮。**每一轮�
 
 注意加密时第一轮只有轮密钥加，最后一轮没有列混淆。
 
-![](.\lockkimg\48-AES加解密原理框图.png)
+![](./lockkimg/48-AES加解密原理框图.png)

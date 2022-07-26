@@ -12,11 +12,11 @@
 - **2008**年谷歌推出**Android**系统的第一个版本
 - **2017**年**3**月，**Android**全球网络流量和设备超越**Microsoft Windows**，正式成为全球第一大操作系统
 
-![](.\img\1-android.png)
+![](./img/1-android.png)
 
 自2008年以来，Android已更迭了许多版本：
 
-![](.\img\2-android版本.png)
+![](./img/2-android版本.png)
 
 Android系统架构：
 
@@ -26,7 +26,7 @@ Android系统架构：
 - 硬件抽象层 (HAL)：让 Android 忽略较低级别的驱动程序实现
 - Linux 内核：提供硬件底层驱动
 
-![](.\img\3-android系统框架图.png)
+![](./img/3-android系统框架图.png)
 
 ## android studio项目开发
 
@@ -48,7 +48,7 @@ Android Studio项目结构主要包括：
     - 包含如字符串、尺寸、颜色和样式定义在内的许多XML文件
     - 其中一个最重要的文件是包含字符串信息的**strings.xml**文件
 
-![](.\img\4-android studio项目结构.png)
+![](./img/4-android studio项目结构.png)
 
 ### Android SDK
 
@@ -56,13 +56,13 @@ Android SDK是开发Android应用程序所需的软件开发工具和库的集�
 
 在导航栏可以打开sdk manager。
 
-![](.\img\5-在导航栏找sdk.png)
+![](./img/5-在导航栏找sdk.png)
 
 sdk manager：
 
-![](.\img\6-sdk android版本.png)
+![](./img/6-sdk android版本.png)
 
-![](.\img\7-sdk android tools.png)
+![](./img/7-sdk android tools.png)
 
 Android SDK包含了从头开始编写程序一直到进行测试所需的所有工具， 这些工具使得从开发、调试到打包的整个开发过程非常顺畅：
 
@@ -72,9 +72,9 @@ Android SDK包含了从头开始编写程序一直到进行测试所需的所有
 - SDK Platform-Tools：平台工具用于支持当前Android平台的特性，与测试设备上的Android平台交互，例如**Android Debug Bridge (adb)**就是一个用于与设备通信的方便的命令行工具，SDK Platform-Tools向后兼容，所以只需要一个版本即可
 - Android Emulator：Android Emulator是一种设备仿真工具，可在计算机上模拟Android设备，从而使开发人员可以在不同设备和Android API级别上测试应用程序，而无需为每个设备都配备物理设备。该工具可以模拟多种Android设备，如Android手机、平板电脑、Wear操作系统和Android电视设备。它提供了提供了真正Android设备的几乎所有功能，如打电话、发短信等。
 
-![](.\img\8-安卓模拟器1.png)
+![](./img/8-安卓模拟器1.png)
 
-![](.\img\9-安卓模拟器2.png)
+![](./img/9-安卓模拟器2.png)
 
 ### Android NDK
 
@@ -95,7 +95,7 @@ Native层方法有两个特征：
 - NDK生成的库文件需要显式加载：通过**System.loadLibrary**加载库，文件名为libMyJni.so的库，加载名字为MyJni
 - 需要声明Native层方法的名字，且在名字前需加上**native**
 
-![](.\img\19-native方法.png)
+![](./img/19-native方法.png)
 
 #### lib库中函数实现
 
@@ -164,7 +164,7 @@ APP_ABI := all
 
 然后将这些文件放在jni文件夹中，使用`ndk-build`编译：
 
-![](.\img\42-ndk build编译.png)
+![](./img/42-ndk build编译.png)
 
 
 
@@ -321,7 +321,7 @@ APK文件是Android应用程序包，本质是一个ZIP格式的压缩包，可�
 - classes.dex文件：存放**Dalvik字节码**的DEX可执行文件
 - resource.arsc：应用资源表文件
 
-![](.\img\10-apk结构.png)
+![](./img/10-apk结构.png)
 
 ### Dalvik虚拟机
 
@@ -341,11 +341,11 @@ Dalvik虚拟机与Java虚拟机的主要区别：
 
 下图展示了Java代码在JVM虚拟机和Dalvik虚拟机上编译执行的区别：
 
-![](.\img\21-Java字节码与dalvik字节码.png)
+![](./img/21-Java字节码与dalvik字节码.png)
 
 下图展示了Java代码在Dalvik虚拟机和ART虚拟机上编译执行的区别：
 
-![](.\img\22-Dalvik ART.png)
+![](./img/22-Dalvik ART.png)
 
 https://www.youtube.com/watch?v=m9UZnWLLurY
 
@@ -436,9 +436,9 @@ https://tryhackme.com/room/androidhacking101
 
 除了android studio自带的模拟器之外，Genymotion模拟器也很好用，个人可以使用免费版。
 
-![](.\img\23-Genymotion界面.png)
+![](./img/23-Genymotion界面.png)
 
-![](.\img\24-Genymotion模拟手机.png)
+![](./img/24-Genymotion模拟手机.png)
 
 下载带VirtualBox的版本容易出错，建议分别下载Genymotion和VirtualBox
 
@@ -504,17 +504,17 @@ https://developer.android.com/studio/command-line/adb
 
 常用的逆向分析软件有Android Killer/jadx/APK Studio/JEB，JEB全称JEB Decompiler，由PNF Software公司开发，是一款闭源商业软件，支持对APK、DEX、Jar文件的反编译
 
-![](.\img\11-JEB介绍.png)
+![](./img/11-JEB介绍.png)
 
 打开JEB，将APK文件拖入其中，得到文件的逆向结果。
 
-![](.\img\12-JEB逆向.png)
+![](./img/12-JEB逆向.png)
 
 #### MainActivity
 
 双击打开MainActivity字节码，右键选择解析/按TAB键，可以看到反编译得到的MainActivity类的Java代码。一般反编译先从MainActivity入手，查看函数逻辑。
 
-![](.\img\13-JEB mainactivity.png)
+![](./img/13-JEB mainactivity.png)
 
 #### AndroidManifest.xml
 
@@ -524,23 +524,23 @@ JEB逆向AndroidManifest.xml，将其解析为可读的格式，根据该文件�
 
 在拿到APK后一般第一个查看这个清单文件，首先要查看APK包含几个Activity，然后找到该APK的启动Activity；留意APK有没有定义其他组件，如Service、Receiver等，它们可能会用来实现不同进程的RPC调用；关注APK**所需的权限**，寻找可能的攻击面。
 
-![](.\img\14-JEB 清单文件.png)
+![](./img/14-JEB 清单文件.png)
 
 #### res/values/资源文件
 
 解密原resources.arsc文件，得到多个XML文件存放在res/values/目录下
 
-![](.\img\15-JEB xml文件.png)
+![](./img/15-JEB xml文件.png)
 
 res/values/目录下的XML文件中，重要的是public.xml和strings.xml。
 
 public.xml中存放着Android程序中所使用的的ID与类型、变量名之间的关系，如果反编译后的代码中有”R.id.xxx”或者”find-ViewById(xxx)”形式的代码，只需要到public.xml中查找该ID对应的变量类型和变量名。
 
-![](.\img\16-JEB public.xml.png)
+![](./img/16-JEB public.xml.png)
 
 然后再到相应的文件如strings.xml中查找相应的值。
 
-![](.\img\17-JEB strings.xml.png)
+![](./img/17-JEB strings.xml.png)
 
 ### JEB动态调试APK
 
@@ -550,7 +550,7 @@ Dalvik虚拟机支持调试，实现了JDWP（Java Debug Wire Protocol，Java调
 
 Dalvik虚拟机为实现JDWP加入了DDM（Dalvik Debug Monitor，Dalvik调试监控器）特性，可以使用**DDMS**（Dalvik Debug Monitor Server，Dalvik调试监控器服务）查看。DDMS主要用于实现设备截屏、查看线程信息、文件预览、模拟来电、模拟短信、模拟GPS信息等功能。在SDK目录的tools文件夹下，双击monitor.bat就可以启动DDMS。
 
-![](.\img\35-DDMS位置.png)
+![](./img/35-DDMS位置.png)
 
 Dalvik虚拟机在启用调试后都会启动一个JDWP线程，等待打开DDMS或者调试器连接。
 
@@ -571,17 +571,17 @@ Dalvik虚拟机在启用调试后都会启动一个JDWP线程，等待打开DDMS
 
 adb在电脑中所在位置可以参考：
 
-![](.\img\25-adb location.png)
+![](./img/25-adb location.png)
 
 ##### 手机/模拟器运行APK
 
 运行APK，不然找不到进程
 
-![](.\img\26-手机运行APK.png)
+![](./img/26-手机运行APK.png)
 
 ##### JEB打开APK文件
 
-![](.\img\34-JEB动态调试打开APK.png)
+![](./img/34-JEB动态调试打开APK.png)
 
 #### JEB动态调试
 
@@ -589,35 +589,35 @@ adb在电脑中所在位置可以参考：
 
 打开调试器
 
-![](.\img\27-JEB打开调试器.PNG)
+![](./img/27-JEB打开调试器.PNG)
 
 检查APP名称是否正确，点击附上
 
-![](.\img\28-JEB debug.png)
+![](./img/28-JEB debug.png)
 
 JEB右侧出现VM栏：
 
-![](.\img\29-JEB VM.png)
+![](./img/29-JEB VM.png)
 
 在MainActivity的smali代码中，按照需求选择获取所需返回值的下一行，然后ctrl+B下断点：
 
-![](.\img\30-JEB下断点.png)
+![](./img/30-JEB下断点.png)
 
 ##### 手机触发目标代码行
 
 在手机APP中输入flag，点击提交：
 
-![](.\img\31-手机触发目标事件.png)
+![](./img/31-手机触发目标事件.png)
 
 ##### JEB查看返回值
 
 能够在JEB的局部变量窗口看到变量值：
 
-![](.\img\32-局部变量类型修改前.png)
+![](./img/32-局部变量类型修改前.png)
 
 将v4变量的int类型修改成正确的string类型，就可以获取到正确的返回值
 
-![](.\img\33-局部变量类型修改后.png)
+![](./img/33-局部变量类型修改后.png)
 
 ### log动态调试
 
@@ -639,7 +639,7 @@ Log.e(String tag, String msg);
 
 将APK文件拖入Android Killer工具中。
 
-![](.\img\38-Android Killer.png)
+![](./img/38-Android Killer.png)
 
 在50行之前输入：
 
@@ -647,26 +647,26 @@ Log.e(String tag, String msg);
 invoke-static {v5, v5}, Landroid/util/Log;->v(Ljava/lang/String;Ljava/lang/String;)I
 ```
 
-![](.\img\39-输入log smali语句.png)
+![](./img/39-输入log smali语句.png)
 
 保存文件修改后，点击编译重打包APK，然后在生成路径下找到打包后的文件。
 
-![](.\img\40-Android Killer重打包.png)
+![](./img/40-Android Killer重打包.png)
 
 在模拟器上安装APK，使用`adb logcat`查看log输出信息，然后模拟器触发事件，就可以看到相应的log。
 
-![](.\img\41-log动态调试输出.png)
+![](./img/41-log动态调试输出.png)
 
 ### Dalvik层混淆
 
 #### ProGuard混淆
 
 ProGuard混淆是Android SDK自带的混淆器，能够将类名、方法名、变量名等标识符进行混淆，修改为无意义的字母组合。
-![](.\img\36-ProGuard混淆.png)
+![](./img/36-ProGuard混淆.png)
 
 ProGuard混淆开启方式非常简单，只要在编译之前将build.gradle配置文件中的minifyEnabled属性设置为true即可。
 
-![](.\img\37-开启ProGuard混淆.png)
+![](./img/37-开启ProGuard混淆.png)
 
 ProGuard混淆不会混淆所有的类名方法名变量名，如果要查看默认不对哪些文字做修改，可以查看混淆设置，位于Android SDK目录下的tools/proguard/proguard-android.txt文件中。
 
@@ -708,19 +708,19 @@ APK执行时执行解壳程序，将真正的DEX解密出来，再使用**DexCla
 
 NDK生成的原生库一般被包含在APK的/lib/<cpu>/lib<name>.so路径下，因为原生代码是针对特定的cpu编译的，如果需要APK运行在超过一种类型的硬件上，就必须在APK中包含原生库的每个编译版本。
 
-![](.\img\18-so库.png)
+![](./img/18-so库.png)
 
 #### 标准的Native方法命名函数
 
 IDA查看**标准的Native方法命名**的函数：
 
-![](.\img\20-IDA查看标准native方法生成函数.png)
+![](./img/20-IDA查看标准native方法生成函数.png)
 
 #### JNI_OnLoad函数
 
 IDA查看**JNI_OnLoad**函数：
 
-![](.\img\43-IDA JNI_OnLoad.png)
+![](./img/43-IDA JNI_OnLoad.png)
 
 #### init_array端
 
@@ -728,19 +728,19 @@ IDA查看**init_array段**：
 
 首先打开Segments窗口：
 
-![](.\img\44-IDA打开Segments窗口.PNG)
+![](./img/44-IDA打开Segments窗口.PNG)
 
 
 
-![](.\img\45-IDA init_array段.png)
+![](./img/45-IDA init_array段.png)
 
 双击进入init_array字段：
 
-![](.\img\46-init_array段隐藏代码.png)
+![](./img/46-init_array段隐藏代码.png)
 
 双击查看函数中隐藏代码：
 
-![](.\img\47-init_array中隐藏函数的代码.png)
+![](./img/47-init_array中隐藏函数的代码.png)
 
 ### IDA动态调试lib库
 
@@ -748,7 +748,7 @@ IDA查看**init_array段**：
 
 打开题目附件中armeabi-v7a中的libLibs.so，拖入IDA中分析，发现包含了简易的反调试信息：
 
-![](.\img\48-JNI_OnLoad反调试.png)
+![](./img/48-JNI_OnLoad反调试.png)
 
 #### IDA patch 反调试
 
@@ -756,62 +756,62 @@ IDA查看**init_array段**：
 
 在JNI_OnLoad函数中，通过Edit->Patch program->Change byte，输入4个00，将反调试patch掉。
 
-![](.\img\49-IDA patch.png)
+![](./img/49-IDA patch.png)
 
 此时再点击F5进行反编译，发现已经没有反调试这句代码了：
 
-![](.\img\50-F5反编译查看patch结果.png)
+![](./img/50-F5反编译查看patch结果.png)
 
 然后将修改保存到文件中：
 
-![](.\img\51-patch结果保存到文件.png)
+![](./img/51-patch结果保存到文件.png)
 
 #### IDA调试端口配置
 
 在IDA目录下的dbgsrv文件夹中找到android_server（因为这个适用于32位arm架构，64位arm处理器则需要android_server64文件），然后将该文件传输到手机端的/data/local/tmp文件夹下：
 
-![](.\img\52-adb push  android_server.png)
+![](./img/52-adb push  android_server.png)
 
 然后输入adb shell，进入模拟器的/data/local/tmp文件夹，将android_server的权限设置为777，然后运行该文件：
 
-![](.\img\53-android_server权限配置.png)
+![](./img/53-android_server权限配置.png)
 
 刚才的cmd窗口不要关，再打开一个新窗口，输入：adb forward tcp:23946 tcp:23946，完成端口转发：
 
-![](.\img\54-配置端口转发.png)
+![](./img/54-配置端口转发.png)
 
 #### so库替换
 
 将patch后的so文件放到运行的app文件夹中，先找到app包所在路径：pm list packages -f | grep lockk
 
-![](.\img\55-查看app包所在路径.png)
+![](./img/55-查看app包所在路径.png)
 
 接下来查看原始so库的情况：
 
-![](.\img\56-查看原始so库情况.png)
+![](./img/56-查看原始so库情况.png)
 
 然后把打过补丁的so库push到该文件夹中：adb push C:\Users\XXXX\Desktop\libLibs.so /data/app/com.iscclockk-1/lib/arm/。如果报错权限不够，需要用adb root语句。（如果使用了adb root语句，会重启adb，前面的android_server运行会关闭，需要重新运行android_server并转发端口。）
 
-![](.\img\57-push patch后so库.png)
+![](./img/57-push patch后so库.png)
 
 接着查看新so库的情况，设置so库的权限：
 
-![](.\img\58-设置新so库权限.png)
+![](./img/58-设置新so库权限.png)
 
 #### IDA attach进程
 
 运行IDA32 pro并连接调试客户端，首先选择debugger：
 
-![](.\img\59-IDA选择debugger.png)
+![](./img/59-IDA选择debugger.png)
 
 然后填写本地IP地址127.0.0.1：
 
-![](.\img\60-填写IP地址.png)
+![](./img/60-填写IP地址.png)
 
 Attach to process，找到lockk：
 
-![](.\img\61-找到lockk进程.png)
+![](./img/61-找到lockk进程.png)
 
 点击OK，可以成功attach到进程：
 
-![](.\img\62-成功attach到进程.png)
+![](./img/62-成功attach到进程.png)
