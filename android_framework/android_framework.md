@@ -90,7 +90,6 @@ Binder、Socket和Handler：
 
 ![](img/app运行机制.png)
 
-参考：
+[参考](https://www.bilibili.com/video/av812017406/)
 
-https://www.bilibili.com/video/av812017406/
-
+[android源码学习网站](http://androidxref.com/)
