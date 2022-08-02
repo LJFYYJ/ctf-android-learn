@@ -1,3 +1,16 @@
+# Android Framework
+
+* [Android Framework](#android-framework)
+  * [Android 系统架构](#android-系统架构)
+  * [Android Framework通信](#android-framework通信)
+    * [APP启动流程](#app启动流程)
+    * [init进程](#init进程)
+    * [zygote进程](#zygote进程)
+      * [fork函数](#fork函数)
+    * [SystemServer进程](#systemserver进程)
+    * [binder通信](#binder通信)
+    * [handler通信](#handler通信)
+
 ## Android 系统架构
 
 ![](img/ape_fwk_all.png)

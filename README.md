@@ -33,3 +33,36 @@ android安全学习笔记
   * Base64 解码
   * 变种AES解密
   * AES原理
+
+第三部分 [Android 系统架构](./android_framework/android_framework.md)
+
+- Android系统架构
+- Android Framework通信
+  - APP启动流程
+  - init进程
+  - zygote进程
+  - SystemServer进程
+  - binder通信
+  - handler通信
+
+第四部分 [android app渗透测试-Activity、Service](./android攻击面/android攻击面整理.md)
+
+* 获取apk源代码
+  * vdexExtrator使用
+* 观察清单文件
+* Activity漏洞挖掘
+  * Activity越权漏洞示例
+  * Activity拒绝服务攻击
+  * Activity劫持
+* Service漏洞挖掘
+  * Service非授权访问
+  * Service消息伪造
+  * Service拒绝服务
+  * 防护原理
+* CTF实例
+  * 程序运行
+  * 攻击面确定
+  * 静态逆向分析
+  * POC编写
+    * AIDL绑定CoreService
+    * 通过MiscService的intent启动WebActivity
