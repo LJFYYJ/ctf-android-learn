@@ -44,6 +44,12 @@ android安全学习笔记
   - SystemServer进程
   - binder通信
   - handler通信
+- binder通信实现
+  * service端
+    * aidl文件
+  * client端
+  * 实现效果
+  * AIDL源码分析
 
 第四部分 [android app渗透测试-Activity、Service](./android攻击面/android攻击面整理.md)
 
