@@ -479,7 +479,7 @@ setTimeout(function (){
 
 ### 综合案例：在安卓10上dump蓝牙接口和实例
 
-附件：bluecrawl-1.0.0-chang.js
+附件：bluecrawl-1.0.0-change.js
 
 附件为[BlueCrawl](https://github.com/IOActive/BlueCrawl)的修改版，主要将`\033`修改为`\x1B`，给一些变量声明前加上`var`，解决报错
 
