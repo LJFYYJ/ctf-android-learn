@@ -72,3 +72,15 @@ android安全学习笔记
   * POC编写
     * AIDL绑定CoreService
     * 通过MiscService的intent启动WebActivity
+
+第五部分 [android hook frida学习](./android-hook/android-hook学习.md)
+
+* 环境配置
+* 基本能力Ⅰ：hook参数、修改结果
+* 基本能力Ⅱ：参数构造、方法重载、隐藏函数的处理
+* hook类中某个函数的所有重载
+* 中级能力：远程调用
+* 高级能力：互联互通、动态修改
+* 简单脚本
+  * 综合案例：在安卓10上dump蓝牙接口和实例
+* Hook Native层
