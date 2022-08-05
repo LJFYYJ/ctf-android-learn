@@ -514,6 +514,8 @@ Java.choose("android.bluetooth.BluetoothDevice",{...});
 
 ![](img/bluecrawl-1.png)
 
+![](img/bluecrawl-2.png)
+
 ![](img/bluecrawl-3.png)
 
 ## Hook Native层
