@@ -83,3 +83,5 @@ android安全学习笔记
 * 简单脚本
   * 综合案例：在安卓10上dump蓝牙接口和实例
 * Hook Native层
+* 动静态结合逆向WhatsApp
+
