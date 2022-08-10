@@ -1,7 +1,9 @@
 # ctf-android-learn
 android安全学习笔记
 
-第一部分 [android安全基础知识](./android安全学习/android安全学习.md)
+第一部分 [加密与解密](./密码学/加密与解密.md)
+
+第二部分 [android安全基础知识](./android安全学习/android安全学习.md)
 
   * android
   * android studio项目开发
@@ -20,7 +22,7 @@ android安全学习笔记
     * IDA静态分析lib库
     * IDA动态调试lib库
 
-第二部分 [ISCC2021LOCKK题解](./LOCKK题解/ISCC2021LOCKK题解.md)
+第三部分 [ISCC2021LOCKK题解](./LOCKK题解/ISCC2021LOCKK题解.md)
 
 * 程序运行
 * 静态分析
@@ -34,7 +36,7 @@ android安全学习笔记
   * 变种AES解密
   * AES原理
 
-第三部分 [Android 系统架构](./android_framework/android_framework.md)
+第四部分 [Android 系统架构](./android_framework/android_framework.md)
 
 - Android系统架构
 - Android Framework通信
@@ -51,7 +53,7 @@ android安全学习笔记
   * 实现效果
   * AIDL源码分析
 
-第四部分 [android app渗透测试-Activity、Service](./android攻击面/android攻击面整理.md)
+第五部分 [android app渗透测试-Activity、Service](./android攻击面/android攻击面整理.md)
 
 * 获取apk源代码
   * vdexExtrator使用
@@ -73,7 +75,7 @@ android安全学习笔记
     * AIDL绑定CoreService
     * 通过MiscService的intent启动WebActivity
 
-第五部分 [android hook frida学习](./android-hook/android-hook学习.md)
+第六部分 [android hook frida学习](./android-hook/android-hook学习.md)
 
 * 环境配置
 * 基本能力Ⅰ：hook参数、修改结果
