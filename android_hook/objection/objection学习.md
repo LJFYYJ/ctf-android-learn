@@ -56,9 +56,7 @@ android heap evaluate 0x31ca
 
 0x31ca可以用作clazz变量
 
-![](img/heap evalute.png)
-
-
+![](img/heap_evalute.png)
 
 ### 查看当前可用的activity或service
 
@@ -74,7 +72,7 @@ android hooking list activities
 android intent launch_activity com.android.settings.nfc.HowItWorks
 ```
 
-![](img/intentlaunch_activity .png)
+![](img/intentlaunch_activity.png)
 
 ![](img/com.android.settings.nfc.HowItWorks.png)
 
