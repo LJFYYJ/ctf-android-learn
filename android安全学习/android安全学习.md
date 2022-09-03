@@ -372,6 +372,20 @@ APK文件是Android应用程序包，本质是一个ZIP格式的压缩包，可�
 
 ![](./img/10-apk结构.png)
 
+### APK打包流程
+
+AAPT2（Android 资源打包工具）是一种构建工具，能够析资源、为资源编制索引，并将资源编译为针对 Android 平台进行过优化的二进制格式。
+
+aidl用于定义客户端与服务均认可的编程接口，以便二者使用进程间通信 (IPC) 进行相互通信
+
+d8是一种命令行工具，将项目的 Java 字节码编译为在 Android 设备上运行的 DEX 字节码。
+
+apksigner工具用于 APK 签名，并确保 APK 的签名能够在 APK 支持的所有版本的 Android 平台上成功通过验证
+
+zipalign 是一种 zip 归档文件对齐工具。它可确保归档中的所有未压缩文件相对于文件开头都是对齐的；如果是apksigner，需要在apksigner之前对齐；如果是jarsigner，需要在jarsigner之后对齐
+
+![](img/APK打包详细流程.png)
+
 ### Dalvik虚拟机
 
 虽然Android平台使用Java语言开发应用程序，但Android程序并非运行在标准的Java虚拟机上，而是运行在谷歌专门为其开发的Dalvik虚拟机上。但是Android4.4以后，为了解决UI卡顿、显示延迟等性能问题，引入了全新的ART（Android RunTime）虚拟机，抛弃了Dalvik虚拟机。
