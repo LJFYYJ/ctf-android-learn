@@ -582,3 +582,60 @@ Java.use("com.android.org.conscrypt.OpenSSLSocketImpl$SSLInputStream").read.over
    });
 ```
 
+## 某app ssl pinning绕过实战
+
+charles抓包失败，提示SSL证书拒绝
+
+![](img/某appcharles抓包connect失败.png)
+
+查看包安装路径，将apk pull到桌面上，用jadx打开分析，发现okhttp3框架
+
+搜索CertificatePinner，找到CertificatePinner类
+
+![](img/搜索CertificatePinner.png)
+
+可以看到熟悉的check函数，直接hook这里就可以了
+
+![](img/CertificatePinner的check函数.png)
+
+编写frida hook代码，参考DroidSSLUnpinning，关键点
+
+- 针对okhttp3框架
+  - 重写CertificatePinner.check方法，不做任何校验
+- WebView组件加载网页发生证书认证错误时，会调用WebViewClient类的onReceivedSslError方法
+  - 调用handler.proceed()可以忽略该证书错误
+
+```javascript
+function main() {
+    Java.perform(function() {
+        var CertificatePinner = Java.use('okhttp3.CertificatePinner');
+        CertificatePinner.check.overload('java.lang.String', 'java.util.List').implementation = function() {
+            console.log('OkHTTP 3.x check() called.');
+        };
+        
+        var WebViewClient = Java.use("android.webkit.WebViewClient");
+        WebViewClient.onReceivedSslError.implementation = function(webView, sslErrorHandler, sslError) {
+            console.log("WebViewClient onReceivedSslError invoke");
+            //执行proceed方法
+            sslErrorHandler.proceed();
+            return;
+        };
+    });
+}
+
+setImmediate(main);
+```
+
+frida运行代码
+
+```
+frida -U -f app包名 -l hook.js --no-pause
+```
+
+输出HOOK日志
+
+![](img/frida输出日志.png)
+
+charles抓包成功
+
+![](img/某app抓包成功.png)

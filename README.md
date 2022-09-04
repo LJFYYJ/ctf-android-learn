@@ -59,6 +59,7 @@ android安全学习笔记
   - r0capture使用与分析
     - HTTPS中间人抓包 绕过双向认证、ssl pinning
     - HOOK抓HTTP、HTTPS包
+    - 某app ssl pinning抓包实战
 
 第九部分 [android app渗透测试-Activity、Service](./android攻击面/android攻击面整理.md)
 
