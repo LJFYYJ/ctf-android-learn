@@ -221,12 +221,12 @@ APP_ABI := all
 
 MyJni.getPart3方法调用后，JNI需要连接到库中的相应函数，因此必须知道 Java 声明的**Native方法**与**so库中函数**的配对关系，配对的方式主要有两种：
 
-- 使用**JNI Native**方法名称解析的**动态链接**
+- 使用**JNI Native**方法名称解析的**静态注册**
 
   - 动态链接中需要根据**规范命名**库中的函数，以便系统能够正确的动态链接，如如getPart3对应的库函数名为`Java_com_example_mobilenormal_MyJni_getPart3`
   - 前缀` Java`，一个完整的类名`com_example_mobilenormal_MyJni`，原方法名称`getPart3`
 
-- 使用**Registernative API**调用的**静态链接**
+- 使用**Registernative API**调用的**动态注册**
 
   - `(*env)->RegisterNatives(env, class, method, numMethods)`，调用该函数，即可**动态注册**Native函数
 

@@ -70,8 +70,12 @@ android安全学习笔记
 * Service漏洞挖掘
   * Service非授权访问、消息伪造、拒绝服务
 * CTF实例
-  * 攻击面确定、静态逆向分析
-  * POC编写
-    * AIDL绑定CoreService
-    * 通过MiscService的intent启动WebActivity
 
+第十部分 [android加壳脱壳学习](./android加壳脱壳/android加壳脱壳学习.md)
+
+其他部分
+
+- Web安全学习
+  - [Java Web安全](./其他/Web安全学习/JavaWeb安全学习.md)
+    - CommonsCollections6利用链学习
+    - shiro550反序列化漏洞利用

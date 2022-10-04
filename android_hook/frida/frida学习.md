@@ -45,6 +45,62 @@ entry_point_from_quick_compiledcode = art_quick_generic_jni_trampoline函数的�
 entry_point_frominterpreter = artInterpreterToCompiledCodeBridge函数地址
 ```
 
+## frida实现
+
+frida实现的介绍可以参考https://frida.re/docs/presentations/官网上2015年的presentation，pdf文件已经放在了文件夹下
+
+主要的流程：
+
+- 创建包含agent的.so文件
+- 使用ptrace注入远程进程中的线程
+- 在远程进程中为bootstrapper启动加载器分配内存
+- 用自己的代码填充bootstraper
+- 在远程进程中运行bootstraper，包括
+  - 开启新的线程
+    - 打开通向debugger进程的FIFO
+    - 通过FIFO通知debugger
+    - 加载agent .so文件
+    - 运行.so文件中的agent入口
+    - 关闭FIFO
+
+最开始时通过ptrace注入线程
+
+![](img/frida开始注入.png)
+
+然后使用自己的代码填充bootstrapper，并运行bootstrapper，开启新的线程frida，接下来打开通向debugger的FIFO消息队列，并通过FIFO提醒debugger，然后完成.so文件的加载
+
+![](img/frida成功加载so.png)
+
+然后恢复远程线程的执行
+
+![](img/frida恢复远程线程执行.png)
+
+运行到agent entry point时由frida执行
+
+![](img/frida线程运行.png)
+
+使用objection的`memory list modules`命令，可以看到加载的frida so文件
+
+![](img/frida的so.png)
+
+其余细节可以参考pdf文件
+
+关于ptrace，可学习https://man7.org/linux/man-pages/man2/ptrace.2.html
+
+```C
+long ptrace(enum __ptrace_request request, pid_t pid, void *addr, void *data);
+```
+
+其中request的值常用的有
+
+- PTRACE_TRACEME表示该进程被它的父进程trace，只能有tracee使用，其它的request只能被tracer使用
+- PTRACE_ATTACH表示attach进程号为pid的进程，使用waitpid等待tracee stop
+- PTRACE_GETREGS复制tracee的通用寄存器值到tracer的data参数所在的地址中
+- PTRACE_SETREGS用tracer中data字段的值修改tracee的通用寄存器
+- PTRACE_POKEDATA把data字段复制到tracee内存的addr地址处
+- PTRACE_CONT重新启动停止的tracee进程
+- PTRACE_DETACH在PTRACE_CONT后重新启动tracee，但是首先从它上面detach
+
 ## 使用配置
 
 frida-server版本和pip安装的frida版本要一致
