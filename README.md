@@ -75,7 +75,7 @@ android安全学习笔记
 
 其他部分
 
-- Web安全学习
-  - [Java Web安全](./其他/Web安全学习/JavaWeb安全学习.md)
-    - CommonsCollections6利用链学习
-    - shiro550反序列化漏洞利用
+- [Java Web安全](./其他/Web安全学习/JavaWeb安全学习.md)
+  - CommonsCollections6利用链学习
+  - shiro550反序列化漏洞利用
+- [Log4J2漏洞复现及原理分析](./其他/Log4j2漏洞复现/Log4j2漏洞复现.md)
