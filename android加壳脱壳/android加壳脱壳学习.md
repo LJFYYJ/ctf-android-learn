@@ -286,268 +286,23 @@ private void testDexClassLoader(Context context, String dexfilepath) {
  }
 ```
 
-### 可能的脱壳点
+## Dex加固技术发展
 
-关注恢复后的时机、文件起始位置、文件的大小
+第一代：Dex整体加固壳
 
-#### DEX加载流程
+- 文件粒度的保护，从文件或内存中加载
 
-DexClassLoader构造函数
+第二代：函数抽取壳
 
-![](img/DexClassLoader构造函数.png)
+- 函数粒度的保护，获取到被保护的Dex后，函数体的内容仍是无效的，例如都被nop指令填充
 
-BaseDexClassLoader参数一致的构造函数
+第三代：Vmp和dex2C
 
-![](img/BaseDexClassLoader构造函数.png)
+- 指令粒度的保护，特点是Java函数native化
+  - VMP壳：被保护的Java函数共享一个解释器，共用一个注册地址；注册地址相同，函数逻辑类似
+  - Dex2C壳：每个函数分别进行语义等价的转换，注册地址不同，函数逻辑不同
 
-DexPathList最后调用的构造函数
 
-![](img/DexPathList构造函数.png)
-
-makeDexElements函数
-
-![](img/makeDexElements函数.png)
-
-loadDexFile函数根据是否优化分别调用DexFile和DexFile.loadDex
-
-- loadDex函数会调用`new DexFile(sourcePathName, outputPathName, flags, loader, elements);`
-
-![](img/loadDexFile函数.png)
-
-DexFile中最终调用的构造函数
-
-- 可以看出mInternalCookie和mCookie值相同
-
-![](img/DexFile.png)
-
-- loadDex函数调用的DexFile函数版本，最后调用的openDexFile是同一个
-
-![](img/loadDex函数调用的DexFile.png)
-
-openDexFile函数
-
-- 此函数的返回值就是mCookie
-
-![](img/openDexFile函数.png)
-
-openDexFileNative函数
-
-- mCookie就是返回值array，类型为long数组，每一项都是DexFile对象的指针
-
-![](img/openDexFileNative函数.png)
-
-（刚才截图来自于android 9但与android 8流程一致，下面由于产生的调用函数的不同，所以采用android 8的流程和截图）
-
-OpenDexFilesFromOat函数-->oat_file_assistant.MakeUpToDate函数-->GenerateOatFileNoCheck函数
-
-- 判断Dex2Oat函数是否调用成功
-
-![](img/GenerateOatFileNoCheck函数.png)
-
-##### Dex2Oat函数调用
-
-- 构造执行参数，调用exec函数
-
-![](img/Dex2Oat函数.png)
-
-exec函数会调用ExecAndReturnCode函数
-
-- fork创建子进程
-- execv或execve执行程序，在另一个进程中对dex进行编译
-
-![](img/ExecAndReturnCode函数.png)
-
-GenerateOatFileNoChecks函数中返回成功与否结果
-
-MakeUpToDate函数返回成功与否结果
-
-##### 若Dex2Oat函数调用失败
-
-在OpenDexFilesFromOat函数中调用dex_file_loader.Open函数
-
-![](img/OpenDexFilesFromOat中调用失败流程.png)
-
-DexFile的Open函数
-
-![](img/DexFile的Open函数.png)
-
-DexFile的OpenFile函数调用OpenCommon函数
-
-OpenCommon函数中调用了DexFile的构造函数
-
-![](img/opencommon函数.png)
-
-DexFile::DexFile函数
-
-- 第一个参数为Dex基址
-- 第二个参数为Dex大小
-
-![](img/DexFile函数.png)
-
-##### 若Dex2Oat函数调用成功
-
-在OpenDexFilesFromOat函数中调用oat_file_assistant.LoadDexFiles函数
-
-![](img/OpenDexFilesFromOat中调用成功流程.png)
-
-LoadDexFiles函数
-
-![](img/LoadDexFiles函数.png)
-
-OpenDexFile函数
-
-![](img/进入OpenDexFile函数.png)
-
-DexFile::Open函数
-
-![](img/DexFile的Open函数2.png)
-
-然后和调用失败流程一样，进入同一个OpenCommon函数，最后到达DexFile::DexFile函数
-
-无论dex2oat函数是否调用，都会到达OpenCommon函数和DexFile::DexFile函数
-
-OpenCommon函数和DexFile::DexFile函数都可以作为脱壳点
-
-#### Dex2Oat编译流程
-
-dex2oat.cc的main函数
-
-![](img/dex2oat的main函数.png)
-
-Dex2oat函数调用setup
-
-![](img/Dex2oat函数调用setup.png)
-
-setup函数中进行一些编译操作
-
-![](img/setup函数.png)
-
-像编译过程中会调用的CompileMethod函数也可以作为脱壳点
-
-![](img/CompileMethod函数.png)
-
-#### 类的加载和初始化流程
-
-[FART正餐前甜点：ART下几个通用简单高效的dump内存中dex方法](https://bbs.pediy.com/thread-254028.htm)
-
-LoadClass->LoadClassMembers->LinkCode
-
-LoadClassMembers函数负责准备接下来类函数执行过程中所需要的变量和函数
-
-- 该函数首先是遍历内存中dex的相关field并初始化为ArtField对象；
-- 遍历类中所有的函数，并初始化函数对应的ArtMethod对象
-
-![](img/LoadClassMembers.png)
-
-![](img/LoadClassMembers_2.png)
-
-LoadMethod(self, dex_file, it, klass, method)函数也包含了对DexFile对象的引用，因此这也是一个脱壳点
-
-![](img/LoadMethod.png)
-
-通过LoadMethod的DexFile参数获取DexFile起始地址和长度
-
-```javascript
-function main() {
-    var lib = Module.enumerateSymbols("libart.so");
-    var LoadMethod;
-    for(var n in lib) {
-        // 在库中找到名字包含LoadMethod的方法
-        if(lib[n].name.indexOf("LoadMethod") > 0) {
-            console.log(lib[n].name);
-            LoadMethod = lib[n].address;
-        }
-    }
-    Interceptor.attach(LoadMethod, {
-        onEnter:function(arg){
-            // 利用dexfile参数
-            // Process.pointerSize为指针大小，便于后续移植
-            var beg = arg[1].add(Process.pointerSize).readPointer();
-            var size = arg[1].add(Process.pointerSize*2).readU32();
-            console.log(hexdump(beg, {length:16}));
-            console.log(size);
-        }
-    })
-}
-```
-
-![](img/frida_hook.png)
-
-通过LoadMethod的ArtMethod间接获取DexFile
-
-```javascript
-function main() {
-    Java.perform(function() {
-
-        var addrGetDexFile = null;
-        var funcGetDexFile = null;
-        var addrGetObsoleteDexCache = null;
-        var map = {};
-
-        var lib = Module.enumerateSymbols("libart.so");
-        var LoadMethod;
-
-        var module_libext = null;
-        if (Process.arch === "arm64") {
-            module_libext = Module.load("/data/app/fart64.so");
-        } else if (Process.arch === "arm") {
-            module_libext = Module.load("/data/app/fart.so");
-        }
-
-        addrGetDexFile = module_libext.findExportByName("GetDexFile");
-        // 创建一个NativeFunction用于调用位于第一个参数地址的函数，第二个参数为返回值类型，第三个参数为参数类型  
-        funcGetDexFile = new NativeFunction(addrGetDexFile, "pointer", ["pointer", "pointer"]);
-
-        for(var n in lib) {
-            if(lib[n].name.indexOf("LoadMethod") >= 0) {
-                console.log(lib[n].name);
-                LoadMethod = lib[n].address;
-            }
-            if(lib[n].name.indexOf("ArtMethod") >= 0 && lib[n].name.indexOf("GetObsoleteDexCache") >= 0) {
-                console.log(lib[n].name);
-                addrGetObsoleteDexCache = lib[n].address;
-            }
-        }
-
-        Interceptor.attach(LoadMethod, {
-            onEnter:function(arg){
-                // funcGetDexFile即为GetDexFile函数
-                var dexFile = funcGetDexFile(arg[3], addrGetObsoleteDexCache);
-                var beg = dexFile.add(Process.pointerSize).readPointer();
-                var size = dexFile.add(Process.pointerSize*2).readU32();
-                if(map[size] == undefined) {
-                    console.log(hexdump(beg, {length:16}));
-                    map[size] = beg;
-                }
-            }
-        })
-    })
-}
-
-setImmediate(main);
-```
-
-![](img/frida_hook_2.png)
-
-也可以通过反射后的方法间接得到ArtMethod
-
-```javascript
-var classes = Java.use("XXX");
-var methods = classes.class.getDeclaredMethods();
-var artmethod = methods[0].getArtMethod();
-```
-
-#### 函数执行过程
-
-如ArtMethod::invoke方法
-
-以及ART中解析模式下所有函数都要进入的方法Execute
-
-只要获取ArtMethod，就可以通过GetDexFile函数获取dex_file指针，实现dex的内存dump
-
-
-
-关键查找包含 **ArtMethod或DexFile** 为 **参数、返回值或者能够间接获取** 的**可导出**的函数，可以在IDA中查找，然后使用Frida来HOOK
 
 ## Dex整体加固壳
 
@@ -629,7 +384,7 @@ sCurrentActivityThread中mPackages属性存储了加载的apk信息
 
 ![](img/mPackages.png)
 
-在mPackages字典中根据报名字符串可以获得相应的LoadedApk信息
+在mPackages字典中根据包名字符串可以获得相应的LoadedApk信息
 
 LoadedApk类中mClassLoader即为组件类加载器，将mClassLoader修改为DexClassLoader即可实现类加载器的修正
 
@@ -637,72 +392,29 @@ LoadedApk类中mClassLoader即为组件类加载器，将mClassLoader修改为De
 
 ### 常见加固入口类
 
-#### 360加固
+360加固
 
 StubApp作为入口应用，包含`<clinit>`函数、默认构造器、attachBaseContext函数、onCreate函数
 
 ![](img/360加壳.png)
 
-#### 爱加密加固
+爱加密加固
 
 s.h.e.l.l.S作为入口应用
 
 ![](img/爱加密加壳.png)
 
-#### 百度加固
+百度加固
 
 入口类com.baidu.haokan.Application
 
 ![](img/百度加壳.png)
 
-#### 阿里加固
+阿里加固
 
 ![](img/阿里加固.png)
 
-## 函数脱取壳
-
-### Dex中获取所有类名
-
-frida代码获取dex文件所有类名
-
-```javascript
-var classlist = Memory.readU32(beg.add(0x64));
-var classsize = Memory.readU32(beg.add(0x60));
-var typelist = Memory.readU32(beg.add(0x44));
-var strlist = Memory.readU32(beg.add(0x3C));
-for(var i=0; i<classsize; i++) {
-    var address = Memory.readU32(beg.add(classlist + 0x20*i));
-    address = Memory.readU32(beg.add(typelist + 4*address));
-    address = Memory.readU32(beg.add(strlist + 4*address));
-    var classname = Memory.readCString(beg.add(address));
-    classname = classname.replace(/\//g, ".").slice(2).replace(/;/g, "");
-    console.log(classname);
-}
-```
-
-执行结果
-
-![](img/frida代码获取dex文件所有类名.png)
-
-先找到DEX头中class段的偏移
-
-![](img/class_defs_off.png)
-
-根据偏移，找到class_def_item_list段，其中class_idx记录了在type段的下标
-
-![](img/class_idx.png)
-
-在type_id_list段中，找到第0x17项存储的descriptor_idx值0x99
-
-![](img/desciptor_idx.png)
-
-在string_id_list段中，找到第0x99项存储的字符串所在地址为0x3086
-
-![](img/string_id.png)
-
-## 常见脱壳工具
-
-### FRIDA-DEXDump
+### FRIDA-DEXDump脱取整体壳
 
 [FRIDA-DEXDump](https://github.com/hluwa/frida-dexdump)用于find和dump内存中的dex
 
@@ -867,3 +579,310 @@ map_item列表在map的0x4位置处，每个item的大小为0xC
 类型为TYPE_MAP_LIST的条目，item_type值为0x1000，也就是4096；offest值为7380956与map_off字段中的偏移地址一致
 
 ![](img/type_map_list.png)
+
+### 可能的脱壳点
+
+关注恢复后的时机、文件起始位置、文件的大小
+
+#### DEX加载流程-OpenCommon和DexFile::DexFile
+
+DexClassLoader构造函数
+
+![](img/DexClassLoader构造函数.png)
+
+BaseDexClassLoader参数一致的构造函数
+
+![](img/BaseDexClassLoader构造函数.png)
+
+DexPathList最后调用的构造函数
+
+![](img/DexPathList构造函数.png)
+
+makeDexElements函数
+
+![](img/makeDexElements函数.png)
+
+loadDexFile函数根据是否优化分别调用DexFile和DexFile.loadDex
+
+- loadDex函数会调用`new DexFile(sourcePathName, outputPathName, flags, loader, elements);`
+
+![](img/loadDexFile函数.png)
+
+DexFile中最终调用的构造函数
+
+- 可以看出mInternalCookie和mCookie值相同
+
+![](img/DexFile.png)
+
+- loadDex函数调用的DexFile函数版本，最后调用的openDexFile是同一个
+
+![](img/loadDex函数调用的DexFile.png)
+
+**openDexFile函数**
+
+- 此函数的返回值就是mCookie
+
+![](img/openDexFile函数.png)
+
+**openDexFileNative函数**
+
+- mCookie就是返回值array，类型为long数组，每一项都是DexFile对象的指针
+
+![](img/openDexFileNative函数.png)
+
+（刚才截图来自于android 9但与android 8流程一致，下面由于产生的调用函数的不同，所以采用android 8的流程和截图）
+
+OpenDexFilesFromOat函数-->oat_file_assistant.MakeUpToDate函数-->GenerateOatFileNoCheck函数
+
+- 判断Dex2Oat函数是否调用成功
+
+![](img/GenerateOatFileNoCheck函数.png)
+
+##### Dex2Oat函数调用
+
+- 构造执行参数，调用exec函数
+
+![](img/Dex2Oat函数.png)
+
+exec函数会调用ExecAndReturnCode函数
+
+- fork创建子进程
+- execv或execve执行程序，在另一个进程中对dex进行编译
+
+![](img/ExecAndReturnCode函数.png)
+
+GenerateOatFileNoChecks函数中返回成功与否结果
+
+MakeUpToDate函数返回成功与否结果
+
+##### 若Dex2Oat函数调用失败
+
+在OpenDexFilesFromOat函数中调用dex_file_loader.Open函数
+
+![](img/OpenDexFilesFromOat中调用失败流程.png)
+
+DexFile的Open函数
+
+![](img/DexFile的Open函数.png)
+
+DexFile的OpenFile函数调用OpenCommon函数
+
+**OpenCommon函数**中调用了DexFile的构造函数
+
+![](img/opencommon函数.png)
+
+**DexFile::DexFile函数**
+
+- 第一个参数为Dex基址
+- 第二个参数为Dex大小
+
+![](img/DexFile函数.png)
+
+##### 若Dex2Oat函数调用成功
+
+在OpenDexFilesFromOat函数中调用oat_file_assistant.LoadDexFiles函数
+
+![](img/OpenDexFilesFromOat中调用成功流程.png)
+
+LoadDexFiles函数
+
+![](img/LoadDexFiles函数.png)
+
+OpenDexFile函数
+
+![](img/进入OpenDexFile函数.png)
+
+DexFile::Open函数
+
+![](img/DexFile的Open函数2.png)
+
+然后和调用失败流程一样，进入同一个OpenCommon函数，最后到达DexFile::DexFile函数
+
+无论dex2oat函数是否调用，都会到达OpenCommon函数和DexFile::DexFile函数
+
+**OpenCommon函数**和**DexFile::DexFile函数**都可以作为脱壳点
+
+#### Dex2Oat编译流程-CompileMethod
+
+dex2oat.cc的main函数
+
+![](img/dex2oat的main函数.png)
+
+Dex2oat函数调用setup
+
+![](img/Dex2oat函数调用setup.png)
+
+setup函数中进行一些编译操作
+
+![](img/setup函数.png)
+
+像编译过程中会调用的**CompileMethod函数**也可以作为脱壳点
+
+![](img/CompileMethod函数.png)
+
+#### 类的加载和初始化流程-LoadMethod
+
+[FART正餐前甜点：ART下几个通用简单高效的dump内存中dex方法](https://bbs.pediy.com/thread-254028.htm)
+
+LoadClass->LoadClassMembers->LinkCode
+
+LoadClassMembers函数负责准备接下来类函数执行过程中所需要的变量和函数
+
+- 该函数首先是遍历内存中dex的相关field并初始化为ArtField对象；
+- 遍历类中所有的函数，并初始化函数对应的ArtMethod对象
+
+![](img/LoadClassMembers.png)
+
+![](img/LoadClassMembers_2.png)
+
+LoadMethod(self, dex_file, it, klass, method)函数也包含了对DexFile对象的引用，因此这也是一个脱壳点
+
+![](img/LoadMethod.png)
+
+通过**LoadMethod**的DexFile参数获取**DexFile起始地址**和**长度**
+
+```javascript
+function main() {
+    var lib = Module.enumerateSymbols("libart.so");
+    var LoadMethod;
+    for(var n in lib) {
+        // 在库中找到名字包含LoadMethod的方法
+        if(lib[n].name.indexOf("LoadMethod") > 0) {
+            console.log(lib[n].name);
+            LoadMethod = lib[n].address;
+        }
+    }
+    Interceptor.attach(LoadMethod, {
+        onEnter:function(arg){
+            // 利用dexfile参数
+            // Process.pointerSize为指针大小，便于后续移植
+            var beg = arg[1].add(Process.pointerSize).readPointer();
+            var size = arg[1].add(Process.pointerSize*2).readU32();
+            console.log(hexdump(beg, {length:16}));
+            console.log(size);
+        }
+    })
+}
+```
+
+![](img/frida_hook.png)
+
+通过LoadMethod的ArtMethod间接获取DexFile
+
+```javascript
+function main() {
+    Java.perform(function() {
+
+        var addrGetDexFile = null;
+        var funcGetDexFile = null;
+        var addrGetObsoleteDexCache = null;
+        var map = {};
+
+        var lib = Module.enumerateSymbols("libart.so");
+        var LoadMethod;
+
+        var module_libext = null;
+        if (Process.arch === "arm64") {
+            module_libext = Module.load("/data/app/fart64.so");
+        } else if (Process.arch === "arm") {
+            module_libext = Module.load("/data/app/fart.so");
+        }
+
+        addrGetDexFile = module_libext.findExportByName("GetDexFile");
+        // 创建一个NativeFunction用于调用位于第一个参数地址的函数，第二个参数为返回值类型，第三个参数为参数类型  
+        funcGetDexFile = new NativeFunction(addrGetDexFile, "pointer", ["pointer", "pointer"]);
+
+        for(var n in lib) {
+            if(lib[n].name.indexOf("LoadMethod") >= 0) {
+                console.log(lib[n].name);
+                LoadMethod = lib[n].address;
+            }
+            if(lib[n].name.indexOf("ArtMethod") >= 0 && lib[n].name.indexOf("GetObsoleteDexCache") >= 0) {
+                console.log(lib[n].name);
+                addrGetObsoleteDexCache = lib[n].address;
+            }
+        }
+
+        Interceptor.attach(LoadMethod, {
+            onEnter:function(arg){
+                // funcGetDexFile即为GetDexFile函数
+                var dexFile = funcGetDexFile(arg[3], addrGetObsoleteDexCache);
+                var beg = dexFile.add(Process.pointerSize).readPointer();
+                var size = dexFile.add(Process.pointerSize*2).readU32();
+                if(map[size] == undefined) {
+                    console.log(hexdump(beg, {length:16}));
+                    map[size] = beg;
+                }
+            }
+        })
+    })
+}
+
+setImmediate(main);
+```
+
+![](img/frida_hook_2.png)
+
+也可以通过反射后的方法间接得到ArtMethod
+
+```javascript
+var classes = Java.use("XXX");
+var methods = classes.class.getDeclaredMethods();
+var artmethod = methods[0].getArtMethod();
+```
+
+#### 函数执行过程-ArtMethod::invoke
+
+如ArtMethod::invoke方法
+
+以及ART中解析模式下所有函数都要进入的方法Execute
+
+只要获取ArtMethod，就可以通过GetDexFile函数获取dex_file指针，实现dex的内存dump
+
+
+
+关键查找包含 **ArtMethod或DexFile** 为 **参数、返回值或者能够间接获取** 的**可导出**的函数，可以在IDA中查找，然后使用Frida来HOOK
+
+## 函数脱取壳
+
+### Dex中获取所有类名
+
+frida代码获取dex文件所有类名
+
+```javascript
+var classlist = Memory.readU32(beg.add(0x64));
+var classsize = Memory.readU32(beg.add(0x60));
+var typelist = Memory.readU32(beg.add(0x44));
+var strlist = Memory.readU32(beg.add(0x3C));
+for(var i=0; i<classsize; i++) {
+    var address = Memory.readU32(beg.add(classlist + 0x20*i));
+    address = Memory.readU32(beg.add(typelist + 4*address));
+    address = Memory.readU32(beg.add(strlist + 4*address));
+    var classname = Memory.readCString(beg.add(address));
+    classname = classname.replace(/\//g, ".").slice(2).replace(/;/g, "");
+    console.log(classname);
+}
+```
+
+执行结果
+
+![](img/frida代码获取dex文件所有类名.png)
+
+先找到DEX头中class段的偏移
+
+![](img/class_defs_off.png)
+
+根据偏移，找到class_def_item_list段，其中class_idx记录了在type段的下标
+
+![](img/class_idx.png)
+
+在type_id_list段中，找到第0x17项存储的descriptor_idx值0x99
+
+![](img/desciptor_idx.png)
+
+在string_id_list段中，找到第0x99项存储的字符串所在地址为0x3086
+
+![](img/string_id.png)
+
+
+

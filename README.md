@@ -73,9 +73,17 @@ android安全学习笔记
 
 第十部分 [android加壳脱壳学习](./android加壳脱壳/android加壳脱壳学习.md)
 
+- 类加载器原理
+- Dex整体加固壳、函数脱取壳、Vmp和dex2C
+
 其他部分
 
 - [Java Web安全](./其他/Web安全学习/JavaWeb安全学习.md)
   - CommonsCollections6利用链学习
   - shiro550反序列化漏洞利用
 - [Log4J2漏洞复现及原理分析](./其他/Log4j2漏洞复现/Log4j2漏洞复现.md)
+
+- [逆向安全学习](./其他/逆向安全学习/逆向安全学习.md)
+  - 脱壳技术：ESP定律
+  - 反调试技术：花指令
+
