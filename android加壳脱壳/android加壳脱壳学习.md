@@ -296,13 +296,24 @@ private void testDexClassLoader(Context context, String dexfilepath) {
 
 - 函数粒度的保护，获取到被保护的Dex后，函数体的内容仍是无效的，例如都被nop指令填充
 
+- 函数抽取壳两种形式：
+
+  - 填充类型抽取壳：原有CodeItem空间还在，保证执行前还原填充
+    - 函数执行完以后直接dump下来就可以
+
+  - 修改偏移类型抽取壳：函数原有偏移空间脱离关系，执行前需修正ArtMethod中的偏移
+
+  被函数抽取技术保护的函数始终运行在解释模式，为了运行在解释模式需要：
+
+  - 阻断dex2oat的编译流程，使得dex中的java函数都使用解释模式执行
+  - 使用InMemoryDexClassLoader从内存中加载dex，不经过dex2oat编译流程
+  - 指定某一个被抽取保护的java函数运行在解释模式
+
 第三代：Vmp和dex2C
 
 - 指令粒度的保护，特点是Java函数native化
   - VMP壳：被保护的Java函数共享一个解释器，共用一个注册地址；注册地址相同，函数逻辑类似
   - Dex2C壳：每个函数分别进行语义等价的转换，注册地址不同，函数逻辑不同
-
-
 
 ## Dex整体加固壳
 
@@ -724,7 +735,33 @@ setup函数中进行一些编译操作
 
 [FART正餐前甜点：ART下几个通用简单高效的dump内存中dex方法](https://bbs.pediy.com/thread-254028.htm)
 
-LoadClass->LoadClassMembers->LinkCode
+首先是调用Java层ClassLoader类中loadClass方法，实现类的加载
+
+![](img/loadClass.png)
+
+loadClass会调用findClass方法，在DexPathList中查找所需的类
+
+![](img/findClass.png)
+
+DexPathList的findClass方法，是遍历里面每一个Element的findClass方法
+
+![](img/DexPathList_findClass.png)
+
+内部类Element的findClass方法调用dexFile的loadClassBinaryName方法，然后该方法调用defineClass方法
+
+![](img/DexPathList_Element_findClass.png)
+
+DexFile的defineClass方法会调用Native层的defineClassNative方法
+
+![](img/defineClass.png)
+
+之后进入DefineClass方法，调用LoadClass方法
+
+![](img/ClassLinker_DefineClass.png)
+
+LoadClass方法调用LoadClassMembers方法
+
+![](img/ClassLinker_LoadClass.png)
 
 LoadClassMembers函数负责准备接下来类函数执行过程中所需要的变量和函数
 
