@@ -177,6 +177,42 @@ private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundEx
 
 ![](img/第二个TCP连接的ReturnData包序列化数据.png)
 
+### 漏洞成因及检测方法
+
+[应用安全:JAVA反序列化漏洞之殇](https://cryin.github.io/blog/secure-development-java-deserialization-vulnerability/)
+
+[反序列化漏洞的防御与拒绝服务](https://xz.aliyun.com/t/11288)
+
+[从WebLogic看反序列化漏洞的利用与防御](https://static.anquanke.com/download/b/security-geek-2018-q4/article-11.html)
+
+Java本身的序列化和反序列化不存在问题，但是如果输入的反序列化数据可以被用户控制，那么攻击者可以构造恶意输入，让反序列化产生非预期的对象，执行构造的任意代码
+
+黑白名单
+
+- 反序列化防御代码写在ObjectInputStream类的resolveClass方法中，resolveClass方法用于根据类描述符返回相应的类，可以对类名进行检测，然后再决定是否进行反序列化操作
+- 将org.apache.commons.collections等添加到黑名单，但是黑名单容易被绕过
+- 限制序列化数据的最大字节数、深度、数组大小、引用数
+- 白名单
+  - 允许来自java.lang和java.util的对象
+  - 允许来自本地特定的类
+
+关注反序列化操作函数，判断输入是否可控：
+
+```
+ObjectInputStream.readObject
+ObjectInputStream.readUnshared
+XMLDecoder.readObject
+Yaml.load
+XStream.fromXML
+ObjectMapper.readValue
+JSON.parseObject
+...
+```
+
+关注实现了java.io.Serializable接口的可序列化的类
+
+自动化检测，利用反序列化利用脚本ysoserial
+
 ## CommonsCollections6利用链学习
 
 Apache Commons Collections是一个扩展了Java标准库里的Collection结构的第三方基础库，它提供了很多强有力的数据结构类型并且实现了各种集合工具类

@@ -626,3 +626,24 @@ IMyAidlInterface实现了android的IInterface接口：
   public com.example.appbinder.ResponseData send(com.example.appbinder.RequestData request) throws android.os.RemoteException;
   ```
 
+
+
+关键文件：IMyService.java和MyService.java
+
+- IMyService.java是IMyService.aidl编译后的结果，分析时主要关注`Stub.Proxy`类的实现，学习如何构造发送数据
+- MyService.java是对IMyService.java中接口的实现，分析时主要关注`Stub`类中方法的实现，分析发送数据的含义和限制范围
+
+对于Android Framework，Android源码中只能看到AIDL文件，服务接口和服务实现文件在framework.jar或XXX-service.jar中
+
+获取binder
+
+- 获取app service的binder
+  - `bindservice`方法绑定服务，在`onServiceConnected`回调函数的参数中获取binder
+- 获取系统服务的binder
+  - 通过反射调用`android.os.ServiceManager`的`getService`方法，参数为系统服务的名字，方法返回值即为binder
+
+获取binder后调用方法
+
+- 可以直接用`binder.transact`方法，传入要调用的函数编号
+- 也可以拷贝jar中反编译后的IMyService.java接口文件，先`IMyService.Stub.asInterface(binder)`强制类型转换为IMyService.Stub.Proxy类，再利用转换后的实例调用所需方法
+  - 这些方法最终还是会调用transact函数将数据传输给服务端
