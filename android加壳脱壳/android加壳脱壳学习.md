@@ -315,6 +315,299 @@ private void testDexClassLoader(Context context, String dexfilepath) {
   - VMP壳：被保护的Java函数共享一个解释器，共用一个注册地址；注册地址相同，函数逻辑类似
   - Dex2C壳：每个函数分别进行语义等价的转换，注册地址不同，函数逻辑不同
 
+## 可能的脱壳点
+
+关注恢复后的时机、文件起始位置、文件的大小
+
+### DEX加载流程-OpenCommon和DexFile::DexFile
+
+DexClassLoader构造函数
+
+![](img/DexClassLoader构造函数.png)
+
+BaseDexClassLoader参数一致的构造函数
+
+![](img/BaseDexClassLoader构造函数.png)
+
+DexPathList最后调用的构造函数
+
+![](img/DexPathList构造函数.png)
+
+makeDexElements函数
+
+![](img/makeDexElements函数.png)
+
+loadDexFile函数根据是否优化分别调用DexFile和DexFile.loadDex
+
+- loadDex函数会调用`new DexFile(sourcePathName, outputPathName, flags, loader, elements);`
+
+![](img/loadDexFile函数.png)
+
+DexFile中最终调用的构造函数
+
+- 可以看出mInternalCookie和mCookie值相同
+
+![](img/DexFile.png)
+
+- loadDex函数调用的DexFile函数版本，最后调用的openDexFile是同一个
+
+![](img/loadDex函数调用的DexFile.png)
+
+**openDexFile函数**
+
+- 此函数的返回值就是mCookie
+
+![](img/openDexFile函数.png)
+
+**openDexFileNative函数**
+
+- mCookie就是返回值array，类型为long数组，每一项都是DexFile对象的指针
+
+![](img/openDexFileNative函数.png)
+
+（刚才截图来自于android 9但与android 8流程一致，下面由于产生的调用函数的不同，所以采用android 8的流程和截图）
+
+OpenDexFilesFromOat函数-->oat_file_assistant.MakeUpToDate函数-->GenerateOatFileNoCheck函数
+
+- 判断Dex2Oat函数是否调用成功
+
+![](img/GenerateOatFileNoCheck函数.png)
+
+#### Dex2Oat函数调用
+
+- 构造执行参数，调用exec函数
+
+![](img/Dex2Oat函数.png)
+
+exec函数会调用ExecAndReturnCode函数
+
+- fork创建子进程
+- execv或execve执行程序，在另一个进程中对dex进行编译
+
+![](img/ExecAndReturnCode函数.png)
+
+GenerateOatFileNoChecks函数中返回成功与否结果
+
+MakeUpToDate函数返回成功与否结果
+
+#### 若Dex2Oat函数调用失败
+
+在OpenDexFilesFromOat函数中调用dex_file_loader.Open函数
+
+![](img/OpenDexFilesFromOat中调用失败流程.png)
+
+DexFile的Open函数
+
+![](img/DexFile的Open函数.png)
+
+DexFile的OpenFile函数调用OpenCommon函数
+
+**OpenCommon函数**中调用了DexFile的构造函数
+
+![](img/opencommon函数.png)
+
+**DexFile::DexFile函数**
+
+- 第一个参数为Dex基址
+- 第二个参数为Dex大小
+
+![](img/DexFile函数.png)
+
+#### 若Dex2Oat函数调用成功
+
+在OpenDexFilesFromOat函数中调用oat_file_assistant.LoadDexFiles函数
+
+![](img/OpenDexFilesFromOat中调用成功流程.png)
+
+LoadDexFiles函数
+
+![](img/LoadDexFiles函数.png)
+
+OpenDexFile函数
+
+![](img/进入OpenDexFile函数.png)
+
+DexFile::Open函数
+
+![](img/DexFile的Open函数2.png)
+
+然后和调用失败流程一样，进入同一个OpenCommon函数，最后到达DexFile::DexFile函数
+
+无论dex2oat函数是否调用，都会到达OpenCommon函数和DexFile::DexFile函数
+
+**OpenCommon函数**和**DexFile::DexFile函数**都可以作为脱壳点
+
+### Dex2Oat编译流程-CompileMethod
+
+dex2oat.cc的main函数
+
+![](img/dex2oat的main函数.png)
+
+Dex2oat函数调用setup
+
+![](img/Dex2oat函数调用setup.png)
+
+setup函数中进行一些编译操作
+
+![](img/setup函数.png)
+
+像编译过程中会调用的**CompileMethod函数**也可以作为脱壳点
+
+![](img/CompileMethod函数.png)
+
+### 类的加载和初始化流程-LoadMethod
+
+[脱了马甲我也认识你: 聊聊 Android 中类的真实形态](https://juejin.cn/post/6844903999125061639)
+
+[FART正餐前甜点：ART下几个通用简单高效的dump内存中dex方法](https://bbs.pediy.com/thread-254028.htm)
+
+首先是调用Java层ClassLoader类中loadClass方法，实现类的加载
+
+![](img/loadClass.png)
+
+loadClass会调用findClass方法，在DexPathList中查找所需的类
+
+![](img/findClass.png)
+
+DexPathList的findClass方法，是遍历里面每一个Element的findClass方法
+
+![](img/DexPathList_findClass.png)
+
+内部类Element的findClass方法调用dexFile的loadClassBinaryName方法，然后该方法调用defineClass方法
+
+![](img/DexPathList_Element_findClass.png)
+
+DexFile的defineClass方法会调用Native层的defineClassNative方法
+
+![](img/defineClass.png)
+
+之后进入DefineClass方法，调用LoadClass方法
+
+![](img/DefineClass_native.png)
+
+![](img/ClassLinker_DefineClass.png)
+
+LoadClass方法调用LoadClassMembers方法
+
+![](img/ClassLinker_LoadClass.png)
+
+LoadClassMembers函数负责准备接下来类函数执行过程中所需要的变量和函数
+
+- 该函数首先是遍历内存中dex的相关field并初始化为ArtField对象；
+- 遍历类中所有的函数，并初始化函数对应的ArtMethod对象
+
+![](img/LoadClassMembers.png)
+
+![](img/LoadClassMembers_2.png)
+
+LoadMethod(self, dex_file, it, klass, method)函数也包含了对DexFile对象的引用，因此这也是一个脱壳点
+
+![](img/LoadMethod.png)
+
+通过**LoadMethod**的DexFile参数获取**DexFile起始地址**和**长度**
+
+```javascript
+function main() {
+    var lib = Module.enumerateSymbols("libart.so");
+    var LoadMethod;
+    for(var n in lib) {
+        // 在库中找到名字包含LoadMethod的方法
+        if(lib[n].name.indexOf("LoadMethod") > 0) {
+            console.log(lib[n].name);
+            LoadMethod = lib[n].address;
+        }
+    }
+    Interceptor.attach(LoadMethod, {
+        onEnter:function(arg){
+            // 利用dexfile参数
+            // Process.pointerSize为指针大小，便于后续移植
+            var beg = arg[1].add(Process.pointerSize).readPointer();
+            var size = arg[1].add(Process.pointerSize*2).readU32();
+            console.log(hexdump(beg, {length:16}));
+            console.log(size);
+        }
+    })
+}
+```
+
+![](img/frida_hook.png)
+
+通过LoadMethod的ArtMethod间接获取DexFile
+
+```javascript
+function main() {
+    Java.perform(function() {
+
+        var addrGetDexFile = null;
+        var funcGetDexFile = null;
+        var addrGetObsoleteDexCache = null;
+        var map = {};
+
+        var lib = Module.enumerateSymbols("libart.so");
+        var LoadMethod;
+
+        var module_libext = null;
+        if (Process.arch === "arm64") {
+            module_libext = Module.load("/data/app/fart64.so");
+        } else if (Process.arch === "arm") {
+            module_libext = Module.load("/data/app/fart.so");
+        }
+
+        addrGetDexFile = module_libext.findExportByName("GetDexFile");
+        // 创建一个NativeFunction用于调用位于第一个参数地址的函数，第二个参数为返回值类型，第三个参数为参数类型  
+        funcGetDexFile = new NativeFunction(addrGetDexFile, "pointer", ["pointer", "pointer"]);
+
+        for(var n in lib) {
+            if(lib[n].name.indexOf("LoadMethod") >= 0) {
+                console.log(lib[n].name);
+                LoadMethod = lib[n].address;
+            }
+            if(lib[n].name.indexOf("ArtMethod") >= 0 && lib[n].name.indexOf("GetObsoleteDexCache") >= 0) {
+                console.log(lib[n].name);
+                addrGetObsoleteDexCache = lib[n].address;
+            }
+        }
+
+        Interceptor.attach(LoadMethod, {
+            onEnter:function(arg){
+                // funcGetDexFile即为GetDexFile函数
+                var dexFile = funcGetDexFile(arg[3], addrGetObsoleteDexCache);
+                var beg = dexFile.add(Process.pointerSize).readPointer();
+                var size = dexFile.add(Process.pointerSize*2).readU32();
+                if(map[size] == undefined) {
+                    console.log(hexdump(beg, {length:16}));
+                    map[size] = beg;
+                }
+            }
+        })
+    })
+}
+
+setImmediate(main);
+```
+
+![](img/frida_hook_2.png)
+
+也可以通过反射后的方法间接得到ArtMethod
+
+```javascript
+var classes = Java.use("XXX");
+var methods = classes.class.getDeclaredMethods();
+var artmethod = methods[0].getArtMethod();
+```
+
+### 函数执行过程-ArtMethod::invoke
+
+如ArtMethod::invoke方法
+
+以及ART中解析模式下所有函数都要进入的方法Execute
+
+只要获取ArtMethod，就可以通过GetDexFile函数获取dex_file指针，实现dex的内存dump
+
+
+
+关键查找包含 **ArtMethod或DexFile** 为 **参数、返回值或者能够间接获取** 的**可导出**的函数，可以在IDA中查找，然后使用Frida来HOOK
+
 ## Dex整体加固壳
 
 ### APP运行流程
@@ -591,314 +884,40 @@ map_item列表在map的0x4位置处，每个item的大小为0xC
 
 ![](img/type_map_list.png)
 
-### 可能的脱壳点
 
-关注恢复后的时机、文件起始位置、文件的大小
-
-#### DEX加载流程-OpenCommon和DexFile::DexFile
-
-DexClassLoader构造函数
-
-![](img/DexClassLoader构造函数.png)
-
-BaseDexClassLoader参数一致的构造函数
-
-![](img/BaseDexClassLoader构造函数.png)
-
-DexPathList最后调用的构造函数
-
-![](img/DexPathList构造函数.png)
-
-makeDexElements函数
-
-![](img/makeDexElements函数.png)
-
-loadDexFile函数根据是否优化分别调用DexFile和DexFile.loadDex
-
-- loadDex函数会调用`new DexFile(sourcePathName, outputPathName, flags, loader, elements);`
-
-![](img/loadDexFile函数.png)
-
-DexFile中最终调用的构造函数
-
-- 可以看出mInternalCookie和mCookie值相同
-
-![](img/DexFile.png)
-
-- loadDex函数调用的DexFile函数版本，最后调用的openDexFile是同一个
-
-![](img/loadDex函数调用的DexFile.png)
-
-**openDexFile函数**
-
-- 此函数的返回值就是mCookie
-
-![](img/openDexFile函数.png)
-
-**openDexFileNative函数**
-
-- mCookie就是返回值array，类型为long数组，每一项都是DexFile对象的指针
-
-![](img/openDexFileNative函数.png)
-
-（刚才截图来自于android 9但与android 8流程一致，下面由于产生的调用函数的不同，所以采用android 8的流程和截图）
-
-OpenDexFilesFromOat函数-->oat_file_assistant.MakeUpToDate函数-->GenerateOatFileNoCheck函数
-
-- 判断Dex2Oat函数是否调用成功
-
-![](img/GenerateOatFileNoCheck函数.png)
-
-##### Dex2Oat函数调用
-
-- 构造执行参数，调用exec函数
-
-![](img/Dex2Oat函数.png)
-
-exec函数会调用ExecAndReturnCode函数
-
-- fork创建子进程
-- execv或execve执行程序，在另一个进程中对dex进行编译
-
-![](img/ExecAndReturnCode函数.png)
-
-GenerateOatFileNoChecks函数中返回成功与否结果
-
-MakeUpToDate函数返回成功与否结果
-
-##### 若Dex2Oat函数调用失败
-
-在OpenDexFilesFromOat函数中调用dex_file_loader.Open函数
-
-![](img/OpenDexFilesFromOat中调用失败流程.png)
-
-DexFile的Open函数
-
-![](img/DexFile的Open函数.png)
-
-DexFile的OpenFile函数调用OpenCommon函数
-
-**OpenCommon函数**中调用了DexFile的构造函数
-
-![](img/opencommon函数.png)
-
-**DexFile::DexFile函数**
-
-- 第一个参数为Dex基址
-- 第二个参数为Dex大小
-
-![](img/DexFile函数.png)
-
-##### 若Dex2Oat函数调用成功
-
-在OpenDexFilesFromOat函数中调用oat_file_assistant.LoadDexFiles函数
-
-![](img/OpenDexFilesFromOat中调用成功流程.png)
-
-LoadDexFiles函数
-
-![](img/LoadDexFiles函数.png)
-
-OpenDexFile函数
-
-![](img/进入OpenDexFile函数.png)
-
-DexFile::Open函数
-
-![](img/DexFile的Open函数2.png)
-
-然后和调用失败流程一样，进入同一个OpenCommon函数，最后到达DexFile::DexFile函数
-
-无论dex2oat函数是否调用，都会到达OpenCommon函数和DexFile::DexFile函数
-
-**OpenCommon函数**和**DexFile::DexFile函数**都可以作为脱壳点
-
-#### Dex2Oat编译流程-CompileMethod
-
-dex2oat.cc的main函数
-
-![](img/dex2oat的main函数.png)
-
-Dex2oat函数调用setup
-
-![](img/Dex2oat函数调用setup.png)
-
-setup函数中进行一些编译操作
-
-![](img/setup函数.png)
-
-像编译过程中会调用的**CompileMethod函数**也可以作为脱壳点
-
-![](img/CompileMethod函数.png)
-
-#### 类的加载和初始化流程-LoadMethod
-
-[FART正餐前甜点：ART下几个通用简单高效的dump内存中dex方法](https://bbs.pediy.com/thread-254028.htm)
-
-首先是调用Java层ClassLoader类中loadClass方法，实现类的加载
-
-![](img/loadClass.png)
-
-loadClass会调用findClass方法，在DexPathList中查找所需的类
-
-![](img/findClass.png)
-
-DexPathList的findClass方法，是遍历里面每一个Element的findClass方法
-
-![](img/DexPathList_findClass.png)
-
-内部类Element的findClass方法调用dexFile的loadClassBinaryName方法，然后该方法调用defineClass方法
-
-![](img/DexPathList_Element_findClass.png)
-
-DexFile的defineClass方法会调用Native层的defineClassNative方法
-
-![](img/defineClass.png)
-
-之后进入DefineClass方法，调用LoadClass方法
-
-![](img/ClassLinker_DefineClass.png)
-
-LoadClass方法调用LoadClassMembers方法
-
-![](img/ClassLinker_LoadClass.png)
-
-LoadClassMembers函数负责准备接下来类函数执行过程中所需要的变量和函数
-
-- 该函数首先是遍历内存中dex的相关field并初始化为ArtField对象；
-- 遍历类中所有的函数，并初始化函数对应的ArtMethod对象
-
-![](img/LoadClassMembers.png)
-
-![](img/LoadClassMembers_2.png)
-
-LoadMethod(self, dex_file, it, klass, method)函数也包含了对DexFile对象的引用，因此这也是一个脱壳点
-
-![](img/LoadMethod.png)
-
-通过**LoadMethod**的DexFile参数获取**DexFile起始地址**和**长度**
-
-```javascript
-function main() {
-    var lib = Module.enumerateSymbols("libart.so");
-    var LoadMethod;
-    for(var n in lib) {
-        // 在库中找到名字包含LoadMethod的方法
-        if(lib[n].name.indexOf("LoadMethod") > 0) {
-            console.log(lib[n].name);
-            LoadMethod = lib[n].address;
-        }
-    }
-    Interceptor.attach(LoadMethod, {
-        onEnter:function(arg){
-            // 利用dexfile参数
-            // Process.pointerSize为指针大小，便于后续移植
-            var beg = arg[1].add(Process.pointerSize).readPointer();
-            var size = arg[1].add(Process.pointerSize*2).readU32();
-            console.log(hexdump(beg, {length:16}));
-            console.log(size);
-        }
-    })
-}
-```
-
-![](img/frida_hook.png)
-
-通过LoadMethod的ArtMethod间接获取DexFile
-
-```javascript
-function main() {
-    Java.perform(function() {
-
-        var addrGetDexFile = null;
-        var funcGetDexFile = null;
-        var addrGetObsoleteDexCache = null;
-        var map = {};
-
-        var lib = Module.enumerateSymbols("libart.so");
-        var LoadMethod;
-
-        var module_libext = null;
-        if (Process.arch === "arm64") {
-            module_libext = Module.load("/data/app/fart64.so");
-        } else if (Process.arch === "arm") {
-            module_libext = Module.load("/data/app/fart.so");
-        }
-
-        addrGetDexFile = module_libext.findExportByName("GetDexFile");
-        // 创建一个NativeFunction用于调用位于第一个参数地址的函数，第二个参数为返回值类型，第三个参数为参数类型  
-        funcGetDexFile = new NativeFunction(addrGetDexFile, "pointer", ["pointer", "pointer"]);
-
-        for(var n in lib) {
-            if(lib[n].name.indexOf("LoadMethod") >= 0) {
-                console.log(lib[n].name);
-                LoadMethod = lib[n].address;
-            }
-            if(lib[n].name.indexOf("ArtMethod") >= 0 && lib[n].name.indexOf("GetObsoleteDexCache") >= 0) {
-                console.log(lib[n].name);
-                addrGetObsoleteDexCache = lib[n].address;
-            }
-        }
-
-        Interceptor.attach(LoadMethod, {
-            onEnter:function(arg){
-                // funcGetDexFile即为GetDexFile函数
-                var dexFile = funcGetDexFile(arg[3], addrGetObsoleteDexCache);
-                var beg = dexFile.add(Process.pointerSize).readPointer();
-                var size = dexFile.add(Process.pointerSize*2).readU32();
-                if(map[size] == undefined) {
-                    console.log(hexdump(beg, {length:16}));
-                    map[size] = beg;
-                }
-            }
-        })
-    })
-}
-
-setImmediate(main);
-```
-
-![](img/frida_hook_2.png)
-
-也可以通过反射后的方法间接得到ArtMethod
-
-```javascript
-var classes = Java.use("XXX");
-var methods = classes.class.getDeclaredMethods();
-var artmethod = methods[0].getArtMethod();
-```
-
-#### 函数执行过程-ArtMethod::invoke
-
-如ArtMethod::invoke方法
-
-以及ART中解析模式下所有函数都要进入的方法Execute
-
-只要获取ArtMethod，就可以通过GetDexFile函数获取dex_file指针，实现dex的内存dump
-
-
-
-关键查找包含 **ArtMethod或DexFile** 为 **参数、返回值或者能够间接获取** 的**可导出**的函数，可以在IDA中查找，然后使用Frida来HOOK
 
 ## 函数脱取壳
 
-### Dex中获取所有类名
+### Hook LoadMethod获取Dex中所有类名
 
-frida代码获取dex文件所有类名
+首先hook LoadMethod的函数，获取dexfile的开始地址和大小，然后获取dex文件所有类名
 
 ```javascript
-var classlist = Memory.readU32(beg.add(0x64));
-var classsize = Memory.readU32(beg.add(0x60));
-var typelist = Memory.readU32(beg.add(0x44));
-var strlist = Memory.readU32(beg.add(0x3C));
-for(var i=0; i<classsize; i++) {
-    var address = Memory.readU32(beg.add(classlist + 0x20*i));
-    address = Memory.readU32(beg.add(typelist + 4*address));
-    address = Memory.readU32(beg.add(strlist + 4*address));
-    var classname = Memory.readCString(beg.add(address));
-    classname = classname.replace(/\//g, ".").slice(2).replace(/;/g, "");
-    console.log(classname);
-}
+Interceptor.attach(LoadMethod, {
+    onEnter:function(arg){
+        // funcGetDexFile即为GetDexFile函数
+        var dexFile = funcGetDexFile(arg[3], addrGetObsoleteDexCache);
+        var beg = dexFile.add(Process.pointerSize).readPointer();
+        var size = dexFile.add(Process.pointerSize*2).readU32();
+        if(map[size] == undefined) {
+            console.log(hexdump(beg, {length:16}));
+            map[size] = beg;
+            
+            var classlist = Memory.readU32(beg.add(0x64));
+            var classsize = Memory.readU32(beg.add(0x60));
+            var typelist = Memory.readU32(beg.add(0x44));
+            var strlist = Memory.readU32(beg.add(0x3C));
+            for(var i=0; i<classsize; i++) {
+                var address = Memory.readU32(beg.add(classlist + 0x20*i));
+                address = Memory.readU32(beg.add(typelist + 4*address));
+                address = Memory.readU32(beg.add(strlist + 4*address));
+                var classname = Memory.readCString(beg.add(address));
+                classname = classname.replace(/\//g, ".").slice(2).replace(/;/g, "");
+                console.log(classname);
+            }
+        }
+    }
+})
 ```
 
 执行结果
@@ -921,5 +940,185 @@ for(var i=0; i<classsize; i++) {
 
 ![](img/string_id.png)
 
+### Hook DefineClass获取加载的所有类名
 
+```C
+ObjPtr<mirror::Class> ClassLinker::DefineClass(Thread* self,
+	const char* descriptor,
+	size_t hash,
+	Handle<mirror::ClassLoader> class_loader,
+	const DexFile& dex_file,
+	const dex::ClassDef& dex_class_def) {
+```
 
+android 10 libart.so位置：`/apex/com.android.runtime/lib64/libart.so`
+
+用IDA分析libart.so，可以找到DefineClass的导出名称
+
+![](img/defineclass导出名称.png)
+
+因为在安卓高版本上只有部分系统so库可以被直接调用，frida载入的so无法直接使用libart.so中的导出函数，所以采用枚举符号的方式找到想要调用的导出函数
+
+```javascript
+function traceloadedclass() {
+    var libartmodule = Process.getModuleByName("libart.so");
+    var symbols = libartmodule.enumerateSymbols();
+    for(var i=0; i< symbols.length; i++) {
+        if(symbols[i].name == "_ZN3art11ClassLinker11DefineClassEPNS_6ThreadEPKcmNS_6HandleINS_6mirror11ClassLoaderEEERKNS_7DexFileERKNS_3dex8ClassDefE") {
+            var defineClassaddr = symbols[i].address;
+            console.log("defineClass->" + defineClassaddr);
+            if(defineClassaddr != null) {
+                Interceptor.attach(defineClassaddr, {
+                    onEnter: function(args) {
+                        // 读取descriptor参数中的类名
+                        var loadclassname = ptr(args[2]).readUtf8String();
+                        console.log(loadclassname);
+                    }, onLeave: function(retval) {
+
+                    }
+                })
+            }
+        }
+        
+    }
+    
+}
+
+setImmediate(traceloadedclass);
+```
+
+![](img/DefineClass加载的类名.png)
+
+### Hook LoadClass获取加载的所有类名
+
+```C
+void ClassLinker::LoadClass(Thread* self,
+	const DexFile& dex_file,
+	const dex::ClassDef& dex_class_def,
+	Handle<mirror::Class> klass) {
+```
+
+原理是匹配class_def的地址
+
+```javascript
+function readstring(pointer) {
+    var value = ptr(pointer).readU8();
+    var length = 1;
+    while(value >= 128) {
+        length += 1;
+        value = ptr(pointer).add(0x1).readU8();
+    }
+    var content = ptr(pointer).add(length).readUtf8String();
+    return content;
+}
+
+function getClassNameByClassdef(dexfile, classdef) {
+    var begin = ptr(dexfile).add(Process.pointerSize).readPointer();
+    var size = ptr(dexfile).add(Process.pointerSize*2).readU32();
+    var class_defs_size = ptr(begin).add(0x60).readU32();
+    var class_defs_offest = ptr(begin).add(0x64).readU32();
+    var real_class_def_offest = ptr(begin).add(class_defs_offest);
+    var string_id_off = ptr(begin).add(0x3C).readU32();
+    // 保证对当前dex的分析是正常的
+    if(string_id_off != 112) return;
+    console.log(size+"-------"+class_defs_size+"-------"+classdef);
+    // 遍历所有class_def
+    for(var i=0; i< class_defs_size; i++) {
+        var this_class_def_item = real_class_def_offest.add(32*i);
+        var offset = ptr(classdef).sub(this_class_def_item);
+        // 如果地址一致
+        if(offset == 0) {
+            var type_id_off = ptr(begin).add(0x44).readU32();
+            var real_type_id_off = ptr(begin).add(type_id_off);
+            var this_type_idx = ptr(this_class_def_item).readU32();
+            var string_idx = ptr(real_type_id_off).add(4*this_type_idx).readU32(); 
+            var real_string_id_off = ptr(begin).add(string_id_off);
+            var string_id_item_offest = ptr(real_string_id_off).add(string_idx*4).readU32();
+            var real_string_offest = ptr(begin).add(string_id_item_offest);
+            // 读类名
+            var classname = readstring(real_string_offest);
+            console.log(classname);
+            break;
+        }
+    }
+}
+
+function traceloadclass() {
+    var libartmodule = Process.getModuleByName("libart.so");
+    var symbols = libartmodule.enumerateSymbols();
+    for(var i=0; i< symbols.length; i++) {
+        if(symbols[i].name == "_ZN3art11ClassLinker9LoadClassEPNS_6ThreadERKNS_7DexFileERKNS_3dex8ClassDefENS_6HandleINS_6mirror5ClassEEE") {
+            var loadClassaddr = symbols[i].address;
+            console.log("LoadClass->" + loadClassaddr);
+            if(loadClassaddr != null) {
+                Interceptor.attach(loadClassaddr, {
+                    onEnter: function(args) {
+                        var dexfile = ptr(args[2]);
+                        var classdef = ptr(args[3]);
+                        getClassNameByClassdef(dexfile, classdef);
+                    }, onLeave: function(retval) {
+
+                    }
+                })
+            }
+        }  
+    }
+}
+
+setImmediate(traceloadclass);
+```
+
+![](img/loadclass打印所有加载的类名.png)
+
+### 修改偏移类型抽取壳原理
+
+例如有两个类Test1和Test2
+
+![](img/Test1函数.png)
+
+![](img/Test2函数.png)
+
+Test1的test函数，code_item偏移值为0x470
+
+![](img/Test1的codeoff.png)
+
+Test2的test函数，code_item偏移值为0x4A8
+
+![](img/Test2的codeoff.png)
+
+将Test1的test函数的code_item偏移值，改为Test2的test函数的code_item偏移值
+
+![](img/修改Test1的test函数的codeoff.png)
+
+此时直接拖进jadx反编译会报错，需要修改dex文件的checksum
+
+![](img/提示checksum需要修改.png)
+
+![](img/checksum修改.png)
+
+然后再反编译，就可以发现Test1类的test函数实际执行的是Test2的test函数
+
+![](img/代码偏移修改效果.png)
+
+以上过程可以通过inline-hook来编程实现
+
+只需hook`ShouldUseInterpreterEntrypoint`方法，如果被我们想要替换的方法调用了，就更改方法的code item，同时返回true，要求在解释模式下运行
+
+用于替换旧方法的新方法如下：
+
+```C
+bool new_addr(ArtMethod *artmethod, void *quick_code)
+{
+    bool result = old_addr(artmethod, quick_code);
+    if(artmethod->dex_method_index_ == 13) {
+        LOGD("process:%d, method_idx:%d", getpid(), artmethod->dex_method_index_);
+        artmethod->dex_code_item_offset_ = 0x4A8;
+        return true;
+    }
+    return result;
+}
+```
+
+13就是Test1.test方法的id，在实际要运行到该方法时，替换成位于0x4A8的Test2.test的代码
+
+![](img/Test1.test的id为13.png)

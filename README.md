@@ -1,6 +1,8 @@
 # ctf-android-learn
 android安全学习笔记
 
+[参考资料](./参考资料/参考资料.md)
+
 第一部分 [加密与解密](./密码学/加密与解密.md)
 
 第二部分 [程序员的自我修养](./程序员的自我修养/程序员的自我修养.md)
@@ -44,22 +46,17 @@ android安全学习笔记
 - [EdXposed](./android_hook/edxposed/edxposed学习.md)
   - 原理、安装、使用（HOOK函数、修改属性、主动调用函数）
 - [frida](./android_hook/frida/frida学习.md)
-  - 原理、使用配置
-  - 基本使用：参数构造、方法重载、主动调用
-  - 远程调用、python和javascript互联互通
-  - 在安卓10上dump蓝牙接口和实例
-  - 动静态结合逆向WhatsApp
+  - 原理、使用配置、基本使用、远程调用
+  - 在安卓10上dump蓝牙接口和实例；动静态结合逆向WhatsApp
 
 * [Objection](./android_hook/objection/objection学习.md)
   * 内存漫游、wallbreaker插件、FRIDA-DEXDump插件
 
 - [HTTPS抓包](./android_hook/HTTPS抓包/HTTPS抓包.md)
-  - 原理：中间人攻击、双向认证、SSL Pinning
-  - 配置：Kali、charles代理配置
-  - r0capture使用与分析
-    - HTTPS中间人抓包 绕过双向认证、ssl pinning
-    - HOOK抓HTTP、HTTPS包
-    - 某app ssl pinning抓包实战
+  - 原理：中间人攻击、双向认证、SSL Pinning；配置：Kali、charles代理配置
+  - r0capture使用与分析；HOOK抓HTTP、HTTPS包
+  - HTTPS中间人抓包 绕过双向认证、ssl pinning
+  - 某app ssl pinning抓包实战
 
 第九部分 [android app渗透测试-Activity、Service](./android攻击面/android攻击面整理.md)
 
@@ -79,11 +76,9 @@ android安全学习笔记
 其他部分
 
 - [Java Web安全](./其他/Web安全学习/JavaWeb安全学习.md)
-  - CommonsCollections6利用链学习
-  - shiro550反序列化漏洞利用
+  - CommonsCollections6利用链学习；shiro550反序列化漏洞利用
 - [Log4J2漏洞复现及原理分析](./其他/Log4j2漏洞复现/Log4j2漏洞复现.md)
 
 - [逆向安全学习](./其他/逆向安全学习/逆向安全学习.md)
-  - 脱壳技术：ESP定律
-  - 反调试技术：花指令
+  - 脱壳技术：ESP定律；反调试技术：花指令
 
